@@ -12,9 +12,8 @@
 .nova-title {
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 12px;
   text-align: center;
-  letter-spacing: 0.5px;
+  /* 背景色 / 左边框 / padding 由 inline style 动态生成（依赖主题） */
 }
 
 .nova-chart canvas {
@@ -48,6 +47,14 @@
 
 .nova-table-el tbody tr:hover td {
   filter: brightness(0.96);
+}
+
+/* 多行表格的行头列（首列） */
+.nova-table-el .nova-table-row-head {
+  text-align: left;
+  font-weight: 600;
+  min-width: 80px;
+  white-space: nowrap;
 }
 
 /* 暗色主题微调 */
@@ -87,5 +94,16 @@
     position: absolute;
     left: 12px;
     font-weight: 600;
+  }
+
+  /* 窄屏下：行头列依然左对齐，凸显身份 */
+  .nova-table-el .nova-table-row-head {
+    text-align: left;
+    padding-left: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    font-size: 15px;
+  }
+  .nova-theme-dark .nova-table-el .nova-table-row-head {
+    background: rgba(255, 255, 255, 0.04);
   }
 }

@@ -33,20 +33,22 @@
       zebra:      '#FFF3E0'
     },
     dark: {
-      name: 'dark',
-      background: '#0A0A14',                       // 深空黑
-      text:       '#E0E0FF',                       // 冷光白
-      grid:       '#1F1F35',                       // 细微网格
+      // Dracula 调色板 (https://draculatheme.com)
+      // 克制：低饱和 + 描边 + 不发光的灰；去除高饱和电光与发光霓虹
+      name:       'dark',
+      background: '#282A36',                       // Dracul 背景
+      text:       '#F8F8F2',                       // Dracul 前景
+      grid:       '#44475A',                       // Dracul 当前行 / 网格
+      tableHead:  '#44475A',                       // 表头同色
+      zebra:      '#343746',                       // 奇数行（比背景略亮）
       palette:    [
-        '#00F5FF',  // 电光青
-        '#FF00E5',  // 霓虹粉
-        '#39FF14',  // 毒液绿
-        '#FF6700',  // 烈焰橙
-        '#BD00FF'   // 紫光
+        '#8BE9FD',  // 青
+        '#50FA7B',  // 绿
+        '#FFB86C',  // 橙
+        '#FF79C6',  // 粉
+        '#BD93F9'   // 紫
       ],
-      tableHead:  '#1F1F35',                       // 表头深色
-      zebra:      '#12121F',                       // 斑马纹
-      glow:       true                             // 开启霓虹光晕
+      // 说明：不设 `glow: true` → 所有 shadowBlur 分支不触发
     }
   };
 
@@ -594,7 +596,7 @@
         thCorner.style.borderBottom = `2px solid ${c}`;
       } else {
         thCorner.style.backgroundColor = theme.tableHead;
-        thCorner.style.color = '#FFFFFF';
+        thCorner.style.color = theme.text;
       }
       headRow.appendChild(thCorner);
     }
@@ -604,7 +606,7 @@
       th.textContent = label;
       const c = isGlow ? getColor(theme, i) : headerColor;
       th.style.backgroundColor = isGlow ? c + '22' : c;
-      th.style.color = isGlow ? c : '#FFFFFF';
+      th.style.color = isGlow ? c : theme.text;
       if (isGlow) {
         th.style.borderBottom = `2px solid ${c}`;
         th.style.textShadow = `0 0 6px ${c}88`;
@@ -636,6 +638,12 @@
           tdRow.style.textShadow = `0 0 4px ${c}66`;
         } else {
           tdRow.style.color = theme.text;
+          // Dracula 克制版：行头 2px 左边框，颜色从主题色拿
+          // 表格跟随主题色板，多行表头左边 2px 色带
+          if (theme.name === 'dark' && theme.palette) {
+            const c = getColor(theme, rowIdx % theme.palette.length);
+            tdRow.style.borderLeft = `2px solid ${c}`;
+          }
         }
         tr.appendChild(tdRow);
 

@@ -27,8 +27,8 @@ features:
     title: 表格也是图表
     details: Table 作为第 4 种图表类型独立存在，不需要 canvas，主题色联动，可直接打印。
   - icon: 🪟
-    title: 多行表格（重要特性）
-    details: `data` 为二维数组时自动渲染多行表格，首列作行名，贴近 pandas DataFrame 风格。不用新增字段，不用记规则。
+    title: '多行表格（重要特性）'
+    details: "`data` 为二维数组时自动渲染多行表格，首列作行名，贴近 pandas DataFrame 风格。不用新增字段，不用记规则。"
   - icon: 🪶
     title: 极轻量
     details: 主库仅 628 行（vs Chart.js 11589 行），18KB，无任何运行时依赖，浏览器原生运行。

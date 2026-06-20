@@ -33,20 +33,22 @@
       zebra:      '#FFF3E0'
     },
     dark: {
-      name: 'dark',
-      background: '#0A0A14',                       // 深空黑
-      text:       '#E0E0FF',                       // 冷光白
-      grid:       '#1F1F35',                       // 细微网格
+      // Dracula 调色板 (https://draculatheme.com)
+      // 克制：低饱和 + 描边 + 不发光的灰；去除高饱和电光与发光霓虹
+      name:       'dark',
+      background: '#282A36',                       // Dracul 背景
+      text:       '#F8F8F2',                       // Dracul 前景
+      grid:       '#44475A',                       // Dracul 当前行 / 网格
+      tableHead:  '#44475A',                       // 表头同色
+      zebra:      '#343746',                       // 奇数行（比背景略亮）
       palette:    [
-        '#00F5FF',  // 电光青
-        '#FF00E5',  // 霓虹粉
-        '#39FF14',  // 毒液绿
-        '#FF6700',  // 烈焰橙
-        '#BD00FF'   // 紫光
+        '#8BE9FD',  // 青
+        '#50FA7B',  // 绿
+        '#FFB86C',  // 橙
+        '#FF79C6',  // 粉
+        '#BD93F9'   // 紫
       ],
-      tableHead:  '#1F1F35',                       // 表头深色
-      zebra:      '#12121F',                       // 斑马纹
-      glow:       true                             // 开启霓虹光晕
+      // 说明：不设 `glow: true` → 所有 shadowBlur 分支不触发
     }
   };
 
@@ -60,7 +62,6 @@
     data: [],
     unit: '',
     theme: 'ocean',
-    showTable: false,
     animation: 'fade'
   };
 
@@ -76,15 +77,57 @@
   function isNumber(v) { return typeof v === 'number' && !isNaN(v); }
   function isArray(v)  { return Array.isArray(v); }
 
+  // 判断是否为二维数组：外层数组且第一个元素仍是数组
+  function is2DArray(v) {
+    return isArray(v) && v.length > 0 && isArray(v[0]);
+  }
+
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
   function getColor(theme, index) {
     return theme.palette[index % theme.palette.length];
   }
 
-  function formatValue(value, unit) {
+  /**
+   * 根据最大数值选最合适的量级除数 + 后缀
+   * - 中文场景优先：万 / 亿
+   * - 英文场景：K / M / B
+   * - < 1000 不缩放
+   */
+  function getScale(maxValue) {
+    if (maxValue >= 1e8) return { divisor: 1e8, suffix: '亿' };
+    if (maxValue >= 1e4) return { divisor: 1e4, suffix: '万' };
+    if (maxValue >= 1e9) return { divisor: 1e9, suffix: 'B' };
+    if (maxValue >= 1e6) return { divisor: 1e6, suffix: 'M' };
+    if (maxValue >= 1e3) return { divisor: 1e3, suffix: 'K' };
+    return { divisor: 1, suffix: '' };
+  }
+
+  /**
+   * 格式化数值：大数值自动缩放显示
+   * @param value  原始数值
+   * @param unit   unit 字段
+   * @param scale  getScale() 的返回值
+   */
+  function formatValue(value, unit, scale) {
     if (!isNumber(value)) return String(value);
-    // 千分位
+    const s = scale || { divisor: 1, suffix: '' };
+
+    if (s.divisor > 1) {
+      const scaled = value / s.divisor;
+      let formatted;
+      if (scaled >= 100)      formatted = scaled.toFixed(0);
+      else if (scaled >= 10)  formatted = scaled.toFixed(1);
+      else if (scaled >= 1)   formatted = scaled.toFixed(2);
+      else                    formatted = scaled.toFixed(3);
+      // 去尾随零（只处理小数部分，不动整数位）
+      if (formatted.includes('.')) {
+        formatted = formatted.replace(/0+$/, '').replace(/\.$/, '');
+      }
+      return unit ? `${formatted}${s.suffix}${unit}` : `${formatted}${s.suffix}`;
+    }
+
+    // 原样输出
     const formatted = Number.isInteger(value)
       ? value.toLocaleString('en-US')
       : value.toFixed(2);
@@ -191,8 +234,9 @@
   // 5. 坐标轴 / 布局工具
   // ============================================================
 
-  function niceMax(value) {
-    if (value <= 0) return 10;
+  function niceMax(value, padding) {
+    const p = (typeof padding === 'number') ? padding : 0.1;
+    if (value <= 0) return 10 * (1 + p);
     const exp = Math.floor(Math.log10(value));
     const base = Math.pow(10, exp);
     const norm = value / base;
@@ -201,7 +245,7 @@
     else if (norm <= 2) nice = 2;
     else if (norm <= 5) nice = 5;
     else                nice = 10;
-    return nice * base;
+    return nice * base * (1 + p);
   }
 
   function calcTicks(maxValue, count = 5) {
@@ -209,24 +253,10 @@
     return Array.from({ length: count + 1 }, (_, i) => step * i);
   }
 
-  // ============================================================
-  // 6. BarChart 实现
-  // ============================================================
-  function drawBarChart(ctx, config, theme, width, height) {
-    const padding = { top: 30, right: 20, bottom: 60, left: 50 };
-    const chartW = width  - padding.left - padding.right;
-    const chartH = height - padding.top  - padding.bottom;
-    const isGlow = !!theme.glow;
-
-    const data  = config.data;
-    const max   = niceMax(Math.max(...data, 1));
-    const ticks = calcTicks(max, 5);
-
-    // 背景
-    ctx.fillStyle = theme.background;
-    ctx.fillRect(0, 0, width, height);
-
-    // 网格 + Y 轴刻度
+  /**
+   * 绘制 Y 轴网格 + 刻度文字（Bar/Line 共享）
+   */
+  function drawYAxisGrid(ctx, theme, padding, chartW, chartH, max, ticks, scale) {
     clearGlow(ctx);
     ctx.strokeStyle = theme.grid;
     ctx.lineWidth = 1;
@@ -240,8 +270,31 @@
       ctx.moveTo(padding.left, y);
       ctx.lineTo(padding.left + chartW, y);
       ctx.stroke();
-      ctx.fillText(Math.round(t).toString(), padding.left - 6, y);
+      ctx.fillText(formatValue(t, '', scale), padding.left - 6, y);
     });
+  }
+
+  // ============================================================
+  // 6. BarChart 实现
+  // ============================================================
+  function drawBarChart(ctx, config, theme, width, height) {
+    const padding = { top: 30, right: 20, bottom: 60, left: 50 };
+    const chartW = width  - padding.left - padding.right;
+    const chartH = height - padding.top  - padding.bottom;
+    const isGlow = !!theme.glow;
+
+    const data  = config.data;
+    const yPadding = (typeof config.yPadding === 'number') ? config.yPadding : 0.1;
+    const max   = niceMax(Math.max(...data, 1), yPadding);
+    const scale = getScale(max);
+    const ticks = calcTicks(max, 5);
+
+    // 背景
+    ctx.fillStyle = theme.background;
+    ctx.fillRect(0, 0, width, height);
+
+    // 网格 + Y 轴刻度（Bar/Line 共享）
+    drawYAxisGrid(ctx, theme, padding, chartW, chartH, max, ticks, scale);
 
     // 柱子
     const barCount = data.length;
@@ -276,7 +329,7 @@
       ctx.font = isGlow ? 'bold 12px sans-serif' : '12px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(formatValue(value, config.unit), x + barW / 2, y - 4);
+      ctx.fillText(formatValue(value, config.unit, scale), x + barW / 2, y - 4);
     });
 
     // X 轴标签
@@ -300,29 +353,17 @@
     const isGlow = !!theme.glow;
 
     const data  = config.data;
-    const max   = niceMax(Math.max(...data, 1));
+    const yPadding = (typeof config.yPadding === 'number') ? config.yPadding : 0.1;
+    const max   = niceMax(Math.max(...data, 1), yPadding);
+    const scale = getScale(max);
     const ticks = calcTicks(max, 5);
 
     // 背景
     ctx.fillStyle = theme.background;
     ctx.fillRect(0, 0, width, height);
 
-    // 网格
-    clearGlow(ctx);
-    ctx.strokeStyle = theme.grid;
-    ctx.lineWidth = 1;
-    ctx.fillStyle = theme.text;
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ticks.forEach(t => {
-      const y = padding.top + chartH - (t / max) * chartH;
-      ctx.beginPath();
-      ctx.moveTo(padding.left, y);
-      ctx.lineTo(padding.left + chartW, y);
-      ctx.stroke();
-      ctx.fillText(Math.round(t).toString(), padding.left - 6, y);
-    });
+    // 网格 + Y 轴刻度（Bar/Line 共享）
+    drawYAxisGrid(ctx, theme, padding, chartW, chartH, max, ticks, scale);
 
     // 计算点坐标
     const count = data.length;
@@ -383,7 +424,7 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     points.forEach(p => {
-      ctx.fillText(formatValue(p.v, config.unit), p.x, p.y - 8);
+      ctx.fillText(formatValue(p.v, config.unit, scale), p.x, p.y - 8);
     });
 
     // X 轴标签
@@ -475,7 +516,34 @@
 
   // ============================================================
   // 9. TableChart 实现（DOM 表格）
+  //    自动识别一维 number[] / 二维 number[][]
+  //    - 一维：单行表格（向后兼容）
+  //    - 二维：多行表格，子数组 [0] 作行名，[1..] 作该行数据
   // ============================================================
+
+  /**
+   * 应用标题样式：所有主题都有底色
+   * - dark 主题：主题色 33% 透明 + 茺光
+   * - 普通主题：主题色 8% 透明（低调而可见）
+   */
+  function applyTitleStyle(title, theme, isGlow) {
+    const accent = getColor(theme, 0);
+    title.style.color = isGlow ? accent : theme.text;
+    const alpha = isGlow ? '33' : '14';
+    title.style.background = `linear-gradient(90deg, ${accent}${alpha}, transparent)`;
+    title.style.borderLeft = `3px solid ${accent}`;
+    title.style.paddingLeft = '12px';
+    title.style.paddingRight = '12px';
+    if (isGlow) {
+      title.style.textShadow = `0 0 8px ${accent}99`;
+      title.style.letterSpacing = '1px';
+    } else {
+      title.style.textShadow = '';
+      title.style.letterSpacing = '';
+    }
+    title.style.marginBottom = '12px';
+  }
+
   function renderTable(container, config, theme) {
     container.innerHTML = '';
     container.className = `nova-chart nova-table nova-theme-${theme.name}`;
@@ -484,6 +552,18 @@
 
     const isGlow = !!theme.glow;
     const headerColor = isGlow ? getColor(theme, 0) : theme.tableHead;
+    const isMultiRow = is2DArray(config.data);
+
+    // 计算 dataMax（多行表格只算 row[1..]）
+    let dataMax = 1;
+    if (isMultiRow) {
+      config.data.forEach(row => {
+        row.slice(1).forEach(v => { if (isNumber(v) && v > dataMax) dataMax = v; });
+      });
+    } else {
+      config.data.forEach(v => { if (isNumber(v) && v > dataMax) dataMax = v; });
+    }
+    const scale = getScale(dataMax);
 
     // 标题
     if (config.title) {
@@ -492,15 +572,7 @@
       title.textContent = config.unit
         ? `${config.title}（${config.unit}）`
         : config.title;
-      title.style.color = isGlow ? getColor(theme, 0) : theme.text;
-      if (isGlow) {
-        const accent = getColor(theme, 0);
-        title.style.background = `linear-gradient(90deg, ${accent}33, transparent)`;
-        title.style.borderLeft = `3px solid ${accent}`;
-        title.style.paddingLeft = '12px';
-        title.style.textShadow = `0 0 8px ${accent}99`;
-        title.style.letterSpacing = '1px';
-      }
+      applyTitleStyle(title, theme, isGlow);
       container.appendChild(title);
     }
 
@@ -508,15 +580,33 @@
     const table = document.createElement('table');
     table.className = 'nova-table-el';
 
-    // 表头
+    // ---- 表头 ----
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
+
+    // 多行表格：第一格是行头占位
+    if (isMultiRow) {
+      const thCorner = document.createElement('th');
+      thCorner.className = 'nova-table-row-head';
+      thCorner.textContent = '';
+      if (isGlow) {
+        const c = getColor(theme, 0);
+        thCorner.style.backgroundColor = c + '22';
+        thCorner.style.color = c;
+        thCorner.style.borderBottom = `2px solid ${c}`;
+      } else {
+        thCorner.style.backgroundColor = theme.tableHead;
+        thCorner.style.color = theme.text;
+      }
+      headRow.appendChild(thCorner);
+    }
+
     config.labels.forEach((label, i) => {
       const th = document.createElement('th');
       th.textContent = label;
       const c = isGlow ? getColor(theme, i) : headerColor;
       th.style.backgroundColor = isGlow ? c + '22' : c;
-      th.style.color = isGlow ? c : '#FFFFFF';
+      th.style.color = isGlow ? c : theme.text;
       if (isGlow) {
         th.style.borderBottom = `2px solid ${c}`;
         th.style.textShadow = `0 0 6px ${c}88`;
@@ -526,24 +616,73 @@
     thead.appendChild(headRow);
     table.appendChild(thead);
 
-    // 表体
+    // ---- 表体 ----
     const tbody = document.createElement('tbody');
-    const bodyRow = document.createElement('tr');
-    config.data.forEach((value, i) => {
-      const td = document.createElement('td');
-      td.textContent = formatValue(value, config.unit);
-      td.style.backgroundColor = i % 2 === 0 ? theme.background : theme.zebra;
-      td.style.color = theme.text;
-      if (isGlow) {
-        const c = getColor(theme, i);
-        td.style.borderLeft = `1px solid ${c}33`;
-        td.style.borderRight = `1px solid ${c}33`;
-      }
-      bodyRow.appendChild(td);
-    });
-    tbody.appendChild(bodyRow);
-    table.appendChild(tbody);
 
+    if (isMultiRow) {
+      // 多行表格
+      config.data.forEach((row, rowIdx) => {
+        const tr = document.createElement('tr');
+        const rowBg = rowIdx % 2 === 0 ? theme.background : theme.zebra;
+
+        // 行名（首列）
+        const tdRow = document.createElement('td');
+        tdRow.className = 'nova-table-row-head';
+        tdRow.textContent = String(row[0] != null ? row[0] : '');
+        tdRow.style.fontWeight = '600';
+        tdRow.style.backgroundColor = rowBg;
+        if (isGlow) {
+          const c = getColor(theme, rowIdx);
+          tdRow.style.color = c;
+          tdRow.style.borderLeft = `2px solid ${c}88`;
+          tdRow.style.textShadow = `0 0 4px ${c}66`;
+        } else {
+          tdRow.style.color = theme.text;
+          // Dracula 克制版：行头 2px 左边框，颜色从主题色拿
+          // 表格跟随主题色板，多行表头左边 2px 色带
+          if (theme.name === 'dark' && theme.palette) {
+            const c = getColor(theme, rowIdx % theme.palette.length);
+            tdRow.style.borderLeft = `2px solid ${c}`;
+          }
+        }
+        tr.appendChild(tdRow);
+
+        // 数据列（row[1..]）
+        const values = row.slice(1);
+        values.forEach((value, colIdx) => {
+          const td = document.createElement('td');
+          td.textContent = formatValue(value, config.unit, scale);
+          td.style.backgroundColor = rowBg;
+          td.style.color = theme.text;
+          if (isGlow) {
+            const c = getColor(theme, colIdx);
+            td.style.borderLeft = `1px solid ${c}33`;
+            td.style.borderRight = `1px solid ${c}33`;
+          }
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    } else {
+      // 单行表格（向后兼容）
+      const bodyRow = document.createElement('tr');
+      config.data.forEach((value, i) => {
+        const td = document.createElement('td');
+        td.textContent = formatValue(value, config.unit, scale);
+        td.style.backgroundColor = i % 2 === 0 ? theme.background : theme.zebra;
+        td.style.color = theme.text;
+        if (isGlow) {
+          const c = getColor(theme, i);
+          td.style.borderLeft = `1px solid ${c}33`;
+          td.style.borderRight = `1px solid ${c}33`;
+        }
+        bodyRow.appendChild(td);
+      });
+      tbody.appendChild(bodyRow);
+    }
+
+    table.appendChild(tbody);
     container.appendChild(table);
   }
 
@@ -581,7 +720,23 @@
       if (!isArray(cfg.labels) || !isArray(cfg.data)) {
         throw new Error('NovaChart: labels 和 data 必须是数组');
       }
-      if (cfg.labels.length !== cfg.data.length) {
+
+      // Table 自动识别一维 / 二维；其他图表若误传二维，回退为第一行
+      if (is2DArray(cfg.data) && cfg.type !== 'table') {
+        console.warn(`NovaChart: ${cfg.type} 图不支持二维 data，已取第一行渲染`);
+        cfg.data = cfg.data[0];
+      }
+
+      // 长度校验
+      if (cfg.type === 'table' && is2DArray(cfg.data)) {
+        // 二维：每行长度应 = labels.length + 1（首列是行名）
+        const expected = cfg.labels.length + 1;
+        cfg.data.forEach((row, i) => {
+          if (row.length !== expected) {
+            console.warn(`NovaChart: table 第 ${i + 1} 行长度 ${row.length} ≠ labels 长度 ${cfg.labels.length} + 1`);
+          }
+        });
+      } else if (cfg.labels.length !== cfg.data.length) {
         console.warn(`NovaChart: labels (${cfg.labels.length}) 和 data (${cfg.data.length}) 长度不一致`);
       }
       return cfg;
@@ -625,25 +780,7 @@
           this.container.insertBefore(titleEl, canvas);
         }
         titleEl.textContent = config.title;
-        titleEl.style.color = this.theme.glow ? getColor(this.theme, 0) : this.theme.text;
-        // 暗色主题：标题加光带背景
-        if (this.theme.glow) {
-          const accent = getColor(this.theme, 0);
-          titleEl.style.background = `linear-gradient(90deg, ${accent}33, transparent)`;
-          titleEl.style.borderLeft = `3px solid ${accent}`;
-          titleEl.style.paddingLeft = '12px';
-          titleEl.style.paddingRight = '12px';
-          titleEl.style.textShadow = `0 0 8px ${accent}99`;
-          titleEl.style.letterSpacing = '1px';
-          titleEl.style.marginBottom = '14px';
-        } else {
-          titleEl.style.background = '';
-          titleEl.style.borderLeft = '';
-          titleEl.style.paddingLeft = '';
-          titleEl.style.paddingRight = '';
-          titleEl.style.textShadow = '';
-          titleEl.style.letterSpacing = '';
-        }
+        applyTitleStyle(titleEl, this.theme, !!this.theme.glow);
       } else if (titleEl) {
         titleEl.remove();
       }
