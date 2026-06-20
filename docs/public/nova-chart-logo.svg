@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="bar1" x1="0" y1="180" x2="0" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00F5FF"/>
+      <stop offset="1" stop-color="#0080FF"/>
+    </linearGradient>
+    <linearGradient id="bar2" x1="0" y1="180" x2="0" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF00E5"/>
+      <stop offset="1" stop-color="#BD00FF"/>
+    </linearGradient>
+    <linearGradient id="bar3" x1="0" y1="180" x2="0" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#39FF14"/>
+      <stop offset="1" stop-color="#00C8FF"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="240" height="240" rx="40" fill="#0A0A14"/>
+  <!-- 三根霓虹柱 -->
+  <rect x="50" y="80" width="35" height="100" rx="6" fill="url(#bar1)"/>
+  <rect x="102" y="50" width="35" height="130" rx="6" fill="url(#bar2)"/>
+  <rect x="155" y="110" width="35" height="70" rx="6" fill="url(#bar3)"/>
+  <!-- 折线（叠加在柱状图上） -->
+  <path d="M 67 80 L 119 50 L 172 110" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <circle cx="67" cy="80" r="6" fill="#00F5FF"/>
+  <circle cx="119" cy="50" r="6" fill="#FF00E5"/>
+  <circle cx="172" cy="110" r="6" fill="#39FF14"/>
+  <!-- 标题 -->
+  <text x="120" y="210" text-anchor="middle" fill="#E0E0FF" font-family="sans-serif" font-size="22" font-weight="700" letter-spacing="2">NovaChart</text>
+</svg>

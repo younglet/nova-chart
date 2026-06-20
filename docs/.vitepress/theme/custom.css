@@ -1,0 +1,106 @@
+/* NovaChart 自定义 VitePress 主题 */
+
+:root {
+  --vp-c-brand-1: #00F5FF;
+  --vp-c-brand-2: #FF00E5;
+  --vp-c-brand-3: #BD00FF;
+  --vp-c-brand-soft: rgba(0, 245, 255, 0.14);
+}
+
+.dark {
+  --vp-c-bg: #0A0A14;
+  --vp-c-bg-alt: #12121F;
+  --vp-c-text-1: #E0E0FF;
+}
+
+/* Hero 区域霓虹光晕 */
+.VPHero .name,
+.VPHero .text {
+  background: linear-gradient(120deg, #00F5FF 30%, #FF00E5 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.VPHero .tagline {
+  color: #B0B0E0 !important;
+  font-weight: 500;
+}
+
+/* 按钮霓虹效果 */
+.VPButton.brand {
+  background: linear-gradient(120deg, #00F5FF, #FF00E5);
+  border: none;
+  color: #0A0A14 !important;
+  font-weight: 600;
+}
+
+.VPButton.brand:hover {
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5),
+              0 0 40px rgba(255, 0, 229, 0.3);
+}
+
+/* Feature 卡片霓虹边框 */
+.VPFeature {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.VPFeature:hover {
+  border-color: rgba(0, 245, 255, 0.5);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.dark .VPFeature {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(0, 245, 255, 0.2);
+}
+
+/* 代码块霓虹边框 */
+.vp-doc div[class*='language-'] {
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 8px;
+}
+
+/* 标题色 */
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  color: var(--vp-c-text-1);
+}
+
+/* 链接颜色 */
+.vp-doc a {
+  color: #00F5FF;
+  font-weight: 500;
+}
+
+.vp-doc a:hover {
+  color: #FF00E5;
+}
+
+/* 表格主题 */
+.vp-doc table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 侧边栏激活项霓虹 */
+.VPSidebarItem.is-active > .item .link .text {
+  color: #00F5FF !important;
+  font-weight: 600;
+}
+
+/* 自定义 Hero 图表容器 */
+.hero-chart {
+  margin: 32px auto 0;
+  max-width: 600px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.2),
+              0 0 80px rgba(255, 0, 229, 0.1);
+}

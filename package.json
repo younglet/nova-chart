@@ -1,0 +1,17 @@
+{
+  "name": "nova-chart-docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "terser src/nova-chart.js -c -m -o src/nova-chart.min.js && csso src/nova-chart.css -o src/nova-chart.min.css",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "csso-cli": "^4.0.2",
+    "terser": "^5.48.0",
+    "vitepress": "^1.6.3"
+  }
+}
