@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "terser src/nova-chart.js -c -m -o src/nova-chart.min.js && csso src/nova-chart.css -o src/nova-chart.min.css",
+    "sync": "node scripts/sync-public.js",
+    "predocs:dev": "npm run build && npm run sync",
+    "predocs:build": "npm run build && npm run sync",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"

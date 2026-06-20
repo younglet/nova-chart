@@ -1,0 +1,109 @@
+/* NovaChart.css — 通用容器与表格样式 */
+
+.nova-chart {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+               "PingFang SC", "Microsoft YaHei", sans-serif;
+  padding: 16px;
+  box-sizing: border-box;
+  max-width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.nova-title {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  /* 背景色 / 左边框 / padding 由 inline style 动态生成（依赖主题） */
+}
+
+.nova-chart canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+/* 表格样式 */
+.nova-table-el {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 14px;
+}
+
+.nova-table-el thead th {
+  padding: 12px 16px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.nova-table-el tbody td {
+  padding: 12px 16px;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.nova-table-el tbody tr:hover td {
+  filter: brightness(0.96);
+}
+
+/* 多行表格的行头列（首列） */
+.nova-table-el .nova-table-row-head {
+  text-align: left;
+  font-weight: 600;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+/* 暗色主题微调 */
+.nova-theme-dark .nova-table-el {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* 响应式：窄屏表格转卡片 */
+@media (max-width: 480px) {
+  .nova-table-el,
+  .nova-table-el thead,
+  .nova-table-el tbody,
+  .nova-table-el tr,
+  .nova-table-el th,
+  .nova-table-el td {
+    display: block;
+  }
+
+  .nova-table-el thead {
+    display: none;
+  }
+
+  .nova-table-el tr {
+    margin-bottom: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .nova-table-el td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  .nova-table-el td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 12px;
+    font-weight: 600;
+  }
+
+  /* 窄屏下：行头列依然左对齐，凸显身份 */
+  .nova-table-el .nova-table-row-head {
+    text-align: left;
+    padding-left: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    font-size: 15px;
+  }
+  .nova-theme-dark .nova-table-el .nova-table-row-head {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}

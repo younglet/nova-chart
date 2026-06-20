@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nova-chart on ESP32</title>
+  <link rel="stylesheet" href="nova-chart.min.css">
+  <style>
+    body { font-family: system-ui; background: #f5f7fa; margin: 0; padding: 16px; }
+    h1 { text-align: center; color: #2c3e50; margin: 0 0 16px; font-size: 18px; }
+    #chart { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body>
+  <h1>传感器趋势（最近 1 小时）</h1>
+  <div id="chart"></div>
+
+  <script src="nova-chart.min.js"></script>
+  <script>
+    // 真实场景：从 ESP32 的 /api/sensors 拉数据
+    fetch('/api/sensors')
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('no api')))
+      .then(s => renderChart(s.timestamps, s.temperatures))
+      .catch(() => {
+        // 离线 / 无接口：演示数据
+        const labels = Array.from({length: 12}, (_,i) => (i*5) + 'min')
+        const temps  = [22.3, 22.5, 23.1, 23.8, 24.2, 24.5, 24.8, 25.1, 25.0, 24.7, 24.3, 24.0]
+        renderChart(labels, temps)
+      })
+
+    function renderChart (labels, data) {
+      new NovaChart('chart', {
+        type: 'line',
+        title: '温度 (°C)',
+        labels, data,
+        unit: '°C',
+        theme: 'ocean'
+      })
+    }
+  </script>
+</body>
+</html>
