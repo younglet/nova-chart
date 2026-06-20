@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>下载到 ESP32 · nova-chart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui; background: #f0f2f5; padding: 24px; margin: 0; }
+    .flasher { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 18px; }
+    p { color: #6b7280; font-size: 13px; margin: 0 0 16px; }
+    button { display: block; width: 100%; padding: 12px; background: #10b981; color: #fff; border: 0; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #d1d5db; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #059669; }
+    .status { margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 13px; min-height: 24px; }
+    .status.error { background: #fef2f2; color: #b91c1c; }
+    .status.ok { background: #f0fdf4; color: #15803d; }
+    .progress { margin-top: 8px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #10b981; width: 0; transition: width 0.2s; }
+    .file-list { margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 12px; }
+    .file-list code { display: block; padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="flasher">
+    <h1>📥 下载到 ESP32 · nova-chart</h1>
+    <p>把 nova-chart 三件套写到 ESP32 的 /static/ 目录</p>
+    <div class="file-list">
+      将要写入：
+      <code>/static/nova-chart.min.js</code>
+      <code>/static/nova-chart.min.css</code>
+      <code>/static/index.novachart.html</code>
+    </div>
+    <button id="flash-btn">📥 下载到 ESP32</button>
+    <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="status" id="status">准备就绪</div>
+  </div>
+
+  <script src="../../../scripts/esp32-serial.js"></script>
+  <script>
+    const btn = document.getElementById('flash-btn')
+    const status = document.getElementById('status')
+    const bar = document.getElementById('progress-bar')
+    const setStatus = (m, c) => { status.textContent = m; status.className = 'status' + (c ? ' ' + c : '') }
+    const setProgress = p => { bar.style.width = Math.max(0, Math.min(100, p)) + '%' }
+
+    const FILES = [
+      { path: '/static/nova-chart.min.js', url: '/nova-chart.min.js' },
+      { path: '/static/nova-chart.min.css', url: '/nova-chart.min.css' },
+      { path: '/static/index.novachart.html', url: '/index.novachart.html' }
+    ]
+    const fileToBytes = async e => {
+      const r = await fetch(e.url)
+      if (!r.ok) throw new Error('下载 ' + e.url + ' 失败：' + r.status)
+      return new Uint8Array(await r.arrayBuffer())
+    }
+
+    btn.addEventListener('click', async () => {
+      if (!navigator.serial) { setStatus('浏览器不支持 Web Serial API，请用 Chrome / Edge / Opera。', 'error'); return }
+      btn.disabled = true
+      setStatus('正在准备文件…')
+      setProgress(0)
+      let esp
+      try {
+        const items = []
+        for (const entry of FILES) {
+          setStatus('准备 ' + entry.path + ' …')
+          items.push({ path: entry.path, bytes: await fileToBytes(entry) })
+        }
+        setStatus('点击弹窗选择 ESP32 串口…')
+        esp = new ESP32Serial()
+        await esp.connect()
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i]
+          setStatus('写入 ' + it.path + ' (' + (i+1) + '/' + items.length + ')')
+          const base = (i / items.length) * 100
+          await esp.writeFile(it.path, it.bytes, pct => setProgress(base + (pct / items.length)))
+        }
+        setProgress(100)
+        setStatus('✅ 写入完成！ESP32 端访问 http://<esp32-ip>/static/index.novachart.html', 'ok')
+      } catch (e) {
+        setStatus('❌ ' + (e.message || e), 'error')
+        console.error(e)
+      } finally {
+        if (esp) try { await esp.disconnect() } catch (_) {}
+        btn.disabled = false
+      }
+    })
+  </script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # 快速开始
 
+<iframe src="/examples/flasher.html" width="100%" height="280" frameborder="0" style="border-radius:8px;margin-bottom:24px"></iframe>
+
 ## 安装
 
 ### 方式 1：直接下载（推荐入门）
