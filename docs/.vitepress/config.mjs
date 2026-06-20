@@ -11,7 +11,16 @@ export default defineConfig({
       { text: '指南', link: '/guide/what-is-nova-chart', activeMatch: '/guide/' },
       { text: 'API', link: '/api/config', activeMatch: '/api/' },
       { text: '示例', link: '/examples/bar', activeMatch: '/examples/' },
-      { text: '演示', link: '/demo/' }
+      { text: '演示', link: '/demo/' },
+      {
+        text: '生态',
+        items: [
+          { text: 'novajs', link: 'http://novajs.local' },
+          { text: 'Nova Style', link: 'http://nova-style.local' },
+          { text: 'Nova UI', link: 'http://nova-ui.local' },
+          { text: 'NovaChart', link: 'http://nova-chart.local' }
+        ]
+      }
     ],
 
     sidebar: {
