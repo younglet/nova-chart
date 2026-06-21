@@ -1,65 +1,43 @@
 # 快速开始
 
-<iframe src="/examples/flasher.html" width="100%" height="260" frameborder="0" style="border-radius:8px;margin-bottom:24px"></iframe>
+<Esp32Flasher project="nova-chart" />
 
-## 安装
+## 上传后做什么
 
-### 方式 1：直接下载（推荐入门）
+刷完 [ESP32 部署文档](/guide/esp32-deploy) 里的 `main.py`（最小 HTTP server），ESP32 通电后会把 `/static/` 目录下的文件 serve 出来。
 
-1. 下载两个文件：
-   - `nova-chart.js`
-   - `nova-chart.css`
+> AP / STA 模式、WiFi 名 / IP 都在你自己的 `main.py` 里决定。默认 MicroPython AP 是 `MicroPython-xxxxxx`（无密码），但你完全可以改。
 
-2. 在 HTML 中引入：
+## 在自己的网页里用
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="path/to/nova-chart.css">
-</head>
-<body>
-  <div id="myChart"></div>
-  <script src="path/to/nova-chart.js"></script>
-  <script>
-    new NovaChart('myChart', {
-      type: 'bar',
-      title: '月考成绩',
-      labels: ['语文', '数学', '英语'],
-      data: [85, 92, 78],
-      unit: '分'
-    }).draw();
-  </script>
-</body>
-</html>
-```
+下载两个文件到你的项目（已自动 build 到 `docs/public/`）：
 
-### 方式 2：CDN（即将上线）
+- [nova-chart.min.js](/nova-chart.min.js)（12 KB）
+- [nova-chart.min.css](/nova-chart.min.css)（1.5 KB）
+
+HTML 里引入：
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/nova-chart/dist/nova-chart.css">
-<script src="https://unpkg.com/nova-chart/dist/nova-chart.js"></script>
-```
-
-### 方式 3：NPM（v1.1 计划）
-
-```bash
-npm install nova-chart
-```
-
-```js
-import NovaChart from 'nova-chart';
-import 'nova-chart/dist/nova-chart.css';
+<link rel="stylesheet" href="/nova-chart.min.css">
+<script src="/nova-chart.min.js"></script>
+<div id="myChart"></div>
+<script>
+  new NovaChart('myChart', {
+    type: 'bar',
+    title: '月考成绩',
+    labels: ['语文', '数学', '英语'],
+    data: [85, 92, 78],
+    unit: '分'
+  }).draw()
+</script>
 ```
 
 ## 浏览器要求
 
-NovaChart 支持现代浏览器：
-
 - ✅ Chrome / Edge 90+
 - ✅ Firefox 88+
 - ✅ Safari 14+
-- ❌ IE（不兼容，使用了 ES6+ 特性）
+- ❌ IE（不兼容 ES6+）
 
 ## 第一个图表
 
@@ -73,7 +51,7 @@ NovaChart 支持现代浏览器：
     labels: ['周一', '周二', '周三', '周四', '周五'],
     data: [3, 4, 2, 5, 3],
     unit: '小时'
-  }).draw();
+  }).draw()
 </script>
 ```
 
@@ -96,7 +74,7 @@ new NovaChart('demo', {
   labels: ['语文', '数学', '英语', '物理', '化学'],
   data: [85, 92, 78, 88, 90],
   unit: '分'
-}).draw();
+}).draw()
 ```
 
 <NovaChart :config="{ type: 'bar', title: '月考成绩', labels: ['语文','数学','英语','物理','化学'], data: [85,92,78,88,90], unit: '分' }" />
@@ -112,7 +90,7 @@ new NovaChart('demo', {
   labels: ['9月', '10月', '11月', '12月', '1月', '2月'],
   data: [78, 82, 85, 88, 90, 92],
   unit: '分'
-}).draw();
+}).draw()
 ```
 
 <NovaChart :config="{ type: 'line', title: '一学期数学成绩变化', labels: ['9月','10月','11月','12月','1月','2月'], data: [78,82,85,88,90,92], unit: '分' }" />
@@ -128,7 +106,7 @@ new NovaChart('demo', {
   labels: ['学习', '运动', '娱乐', '睡眠'],
   data: [8, 2, 4, 8],
   unit: '小时'
-}).draw();
+}).draw()
 ```
 
 <NovaChart :config="{ type: 'pie', title: '一天时间分配', labels: ['学习','运动','娱乐','睡眠'], data: [8,2,4,8], unit: '小时' }" />
@@ -144,7 +122,7 @@ new NovaChart('demo', {
   labels: ['语文', '数学', '英语', '物理', '化学'],
   data: [85, 92, 78, 88, 90],
   unit: '分'
-}).draw();
+}).draw()
 ```
 
 <NovaChart :config="{ type: 'table', title: '期末成绩单', labels: ['语文','数学','英语','物理','化学'], data: [85,92,78,88,90], unit: '分' }" />
