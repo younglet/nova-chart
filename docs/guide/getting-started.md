@@ -4,9 +4,7 @@
 
 ## 上传后做什么
 
-刷完 [ESP32 部署文档](/guide/esp32-deploy) 里的 `main.py`（最小 HTTP server），ESP32 通电后会把 `/static/` 目录下的文件 serve 出来。
-
-> AP / STA 模式、WiFi 名 / IP 都在你自己的 `main.py` 里决定。默认 MicroPython AP 是 `MicroPython-xxxxxx`（无密码），但你完全可以改。
+写个 MicroPython HTTP server（精简版 Flask / `nova-server` / 手写 socket 任意）把 `/static/` 目录 serve 出来即可。文件路径示例看 [ESP32 部署文档](/guide/esp32-deploy)。
 
 ## 在自己的网页里用
 
