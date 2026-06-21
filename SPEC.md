@@ -160,31 +160,31 @@ new NovaChart('my', {
 表格头: #FFA94D  斑马纹: #FFF3E0
 ```
 
-#### Theme: `dark`（Dracula 调色板 · 克制版）
+#### Theme: `dark`（低饱和暗色）
 
-> 参考 [Dracula Theme](https://draculatheme.com) 调色，但去掉了高饱和电光与霓虹光晕，遵循“克制”原则：低饱和 + 描边 + 不发光的灰。
+> “克制”原则：低饱和 + 描边 + 不发光的灰。参照业界成熟暗色方案取值，不亮瞎眼、不阴间。
 
 ```
-主色板（5 个数据色，Dracula 原汁原味）：
-  #8BE9FD  青 (cyan)
-  #50FA7B  绿 (green)
-  #FFB86C  橙 (orange)
-  #FF79C6  粉 (pink)
-  #BD93F9  紫 (purple)
+主色板（5 个数据色）：
+  #8BE9FD  青
+  #50FA7B  绿
+  #FFB86C  橙
+  #FF79C6  粉
+  #BD93F9  紫
 
-背景:   #282A36   Dracula 背景
-文字:   #F8F8F2   Dracula 前景
-网格:   #44475A   Dracula 当前行
-表格头: #44475A   同上
+背景:   #282A36
+文字:   #F8F8F2
+网格:   #44475A
+表格头: #44475A
 斑马纹: #343746   比背景略亮
 文字装饰: 不发光，0 shadowBlur；行头 2px 左边框取主色板中的一个
 ```
 
-**去掉了的东西**（v0.1 → v0.2）：
-- 背景 `#0A0A14`（深空黑）→ `#282A36`（Dracula 背景）
-- 文字 `#E0E0FF`（冷光白）→ `#F8F8F2`（Dracula 前景）
-- 调色板：去除电光青 `#00F5FF` / 霓虹粉 `#FF00E5` / 毒液绿 `#39FF14` / 烈焰橙 `#FF6700` / 紫光 `#BD00FF`
-- `glow: true` 字段：所有 `shadowBlur` 调用不再触发
+**v0.1 → v0.2 改动**：
+- 背景 `#0A0A14`（深空黑）→ `#282A36`（更柔）
+- 文字 `#E0E0FF`（冷光白）→ `#F8F8F2`（中性白）
+- 调色板：去除高饱和电光 / 霓虹（`#00F5FF` / `#FF00E5` / `#39FF14` / `#FF6700` / `#BD00FF`）
+- 去掉 `glow: true` 字段，所有 `shadowBlur` 不再触发
 - 柱状/折线/饼图发光轮廓 / 外环发光 / 标题 textShadow / 表格 textShadow：全部去除
 - 表头硬编码 `#FFFFFF` → `theme.text`（`#F8F8F2`）
 

@@ -4,7 +4,7 @@
 
 ## 一句话
 
-**nova-chart** 是 12KB 的极简图表库。4 种图表（Bar / Line / Pie / Table），3 套主题（`ocean` / `sunset` / `dark`）。`dark` 主题用 Dracula 配色。
+**nova-chart** 是 12KB 的极简图表库。4 种图表（Bar / Line / Pie / Table），3 套主题（`ocean` / `sunset` / `dark`）。
 
 ## 目标平台
 
@@ -84,14 +84,14 @@ new NovaChart('canvas-id', {
 |---|---|---|
 | `ocean` | 浅底冷色 | 蓝 / 青 / 橙 / 紫 / 红 |
 | `sunset` | 浅底暖色 | 红 / 橙 / 黄 / 绿 / 蓝 |
-| `dark` | **Dracula 配色**（2026-06 重做，去掉原赛博朋克霓虹） | 青 / 绿 / 橙 / 粉 / 紫 |
+| `dark` | 暗色（低饱和 + 描边 + 不发光的灰） | 青 / 绿 / 橙 / 粉 / 紫 |
 
 `dark` 主题的色板（`src/nova-chart.js` 的 `THEMES.dark`）：
 
 ```js
 dark: {
-  background: '#282A36',  // Dracula 背景
-  text:       '#F8F8F2',  // Dracula 前景
+  background: '#282A36',  // 暗色背景
+  text:       '#F8F8F2',  // 暗色前景
   grid:       '#44475A',  // 当前行
   tableHead:  '#44475A',
   zebra:      '#343746',
@@ -129,7 +129,7 @@ npm run docs:build     # VitePress 构建过
 打开 `docs/public/demo/index.html`（VitePress 走 `http://localhost:5176/demo/`）在浏览器看 4 种图表的渲染效果：
 - Bar / Line / Pie 都能正常画
 - Table 能渲染数据
-- 切到 `theme: 'dark'` 也是 Dracula 配色，无 shadowBlur 发光
+- 切到 `theme: 'dark'` 也好看（低饱和、零 shadowBlur）
 
 `docs/.vitepress/theme/components/NovaChart.vue` 用来在 markdown 里嵌入图表：
 
@@ -143,6 +143,6 @@ npm run docs:build     # VitePress 构建过
 - ❌ 加动画库（保持简洁）
 - ❌ 加插件系统（避免变成第二个 Chart.js）
 - ❌ 加配置项（保持 8 个字段）
-- ❌ 改 `dark` 主题的 Dracula 配色（已定稿）
+- ❌ 改 `dark` 主题配色（已定稿）
 - ❌ 加回 `shadowBlur` 发光效果（违反"克制"原则）
 - ❌ 在 `<nova-*> ...</nova-*>` 直接用于 .md（SSR 崩），用 `<iframe src="/examples/...">` 嵌入
