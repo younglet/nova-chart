@@ -45,9 +45,6 @@ if (fs.existsSync(srcDir)) {
 // 原因：iframe 里的 HTML 可能用 `../src/...` 相对路径
 copyDir(srcDir, path.join(root, 'docs/public/src'), null)
 
-// demo/*.html → docs/public/demo/
-copyDir(path.join(root, 'demo'), path.join(root, 'docs/public/demo'), ['.html'])
-
 // index.<name>.html → docs/public/
 const indexHtml = path.join(root, 'index.novachart.html')
 if (fs.existsSync(indexHtml)) {

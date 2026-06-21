@@ -4,7 +4,7 @@
 
 ## 一句话
 
-**nova-chart** 是 12KB 的极简图表库。4 种图表（Bar / Line / Pie / Table），3 套主题（ocean / sunset / dark/Dracula）。
+**nova-chart** 是 12KB 的极简图表库。4 种图表（Bar / Line / Pie / Table），3 套主题（`ocean` / `sunset` / `dark`）。`dark` 主题用 Dracula 配色。
 
 ## 目标平台
 
@@ -49,8 +49,8 @@ nova-chart/
 │   ├── esp32-serial.js             ← Web Serial 写文件到 ESP32
 │   └── sync-public.js              ← 把 src / demo / index.novachart.html 同步到 docs/public/
 ├── index.novachart.html            ← ESP32 /static/ 入口 HTML
-├── demo/index.html                 ← 离线 demo
 └── docs/                           ← VitePress 文档
+    └── public/demo/index.html       ← 离线 demo（VitePress 访问 demo/）
     └── .vitepress/
         ├── config.mjs              ← sidebar + nav 生态下拉
         └── theme/
@@ -126,7 +126,7 @@ npm run build          # terser + csso 不报错
 npm run docs:build     # VitePress 构建过
 ```
 
-打开 `demo/index.html` 在浏览器看 4 种图表的渲染效果：
+打开 `docs/public/demo/index.html`（VitePress 走 `http://localhost:5176/demo/`）在浏览器看 4 种图表的渲染效果：
 - Bar / Line / Pie 都能正常画
 - Table 能渲染数据
 - 切到 `theme: 'dark'` 也是 Dracula 配色，无 shadowBlur 发光
