@@ -15,10 +15,10 @@ export default defineConfig({
       {
         text: '生态',
         items: [
-          { text: 'novajs', link: 'http://novajs.local' },
-          { text: 'Nova Style', link: 'http://nova-style.local' },
-          { text: 'Nova UI', link: 'http://nova-ui.local' },
-          { text: 'NovaChart', link: 'http://nova-chart.local' }
+          { text: 'novajs', link: 'http://novajs.test:5173' },
+          { text: 'Nova Style', link: 'http://nova-style.test:5174' },
+          { text: 'Nova UI', link: 'http://nova-ui.test:5175' },
+          { text: 'NovaChart', link: 'http://nova-chart.test:5176' }
         ]
       }
     ],
@@ -91,5 +91,11 @@ export default defineConfig({
     ['meta', { property: 'og:description', content: '为 Python 基础学生打造的极简图表库' }],
     ['link', { rel: 'stylesheet', href: '/nova-chart.css' }],
     ['script', { src: '/nova-chart.js', defer: true }]
-  ]
+  ],
+
+  server: {
+    host: '0.0.0.0',
+    port: 5176,
+    allowedHosts: ['novajs.test', 'nova-style.test', 'nova-ui.test', 'nova-chart.test', 'localhost']
+  }
 })

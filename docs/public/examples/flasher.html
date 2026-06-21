@@ -5,28 +5,55 @@
   <title>下载到 ESP32 · nova-chart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui; background: #f0f2f5; padding: 24px; margin: 0; }
-    .flasher { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 24px; }
-    h1 { margin: 0 0 8px; font-size: 18px; }
-    p { color: #6b7280; font-size: 13px; margin: 0 0 16px; }
-    button { display: block; width: 100%; padding: 12px; background: #10b981; color: #fff; border: 0; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    button:disabled { background: #d1d5db; cursor: not-allowed; }
-    button:hover:not(:disabled) { background: #059669; }
-    .status { margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 13px; min-height: 24px; }
-    .status.error { background: #fef2f2; color: #b91c1c; }
-    .status.ok { background: #f0fdf4; color: #15803d; }
-    .progress { margin-top: 8px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
-    .progress-bar { height: 100%; background: #10b981; width: 0; transition: width 0.2s; }
-    .file-list { margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 12px; }
-    .file-list code { display: block; padding: 2px 0; }
+    :root {
+      color-scheme: light dark;
+      --bg: #f0f2f5; --card-bg: #ffffff; --text: #111827; --text-muted: #6b7280;
+      --border: #e5e7eb; --code-bg: #f9fafb; --primary: #10b981; --primary-hover: #059669;
+      --primary-disabled: #d1d5db; --error-bg: #fef2f2; --error-text: #b91c1c;
+      --ok-bg: #f0fdf4; --ok-text: #15803d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8;
+        --border: #334155; --code-bg: #0f172a; --primary: #10b981; --primary-hover: #34d399;
+        --primary-disabled: #334155; --error-bg: #450a0a; --error-text: #fca5a5;
+        --ok-bg: #052e16; --ok-text: #86efac;
+      }
+    }
+    :root.dark, .dark {
+      --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8;
+      --border: #334155; --code-bg: #0f172a; --primary: #10b981; --primary-hover: #34d399;
+      --primary-disabled: #334155; --error-bg: #450a0a; --error-text: #fca5a5;
+      --ok-bg: #052e16; --ok-text: #86efac;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text);
+      padding: 12px; font-size: 13px; line-height: 1.45;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .flasher { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+    h1 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+    p  { margin: 0 0 8px; color: var(--text-muted); font-size: 12px; }
+    .file-list { margin: 0 0 8px; padding: 6px 8px; background: var(--code-bg); border-radius: 4px; font-size: 11px; color: var(--text-muted); max-height: 100px; overflow-y: auto; }
+    .file-list code { display: block; color: var(--text); word-break: break-all; padding: 1px 0; font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+    button { display: block; width: 100%; padding: 8px 12px; background: var(--primary); color: #fff; border: 0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 0.15s; }
+    button:disabled { background: var(--primary-disabled); cursor: not-allowed; }
+    button:hover:not(:disabled) { background: var(--primary-hover); }
+    .progress { margin-top: 8px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--primary); width: 0; transition: width 0.2s; }
+    .status { margin-top: 8px; padding: 6px 8px; background: var(--code-bg); border-radius: 4px; font-size: 11px; min-height: 20px; word-break: break-all; }
+    .status.error { background: var(--error-bg); color: var(--error-text); }
+    .status.ok    { background: var(--ok-bg);    color: var(--ok-text); }
   </style>
 </head>
 <body>
   <div class="flasher">
     <h1>📥 下载到 ESP32 · nova-chart</h1>
-    <p>把 nova-chart 三件套写到 ESP32 的 /static/ 目录</p>
+    <p>把 nova-chart 三件套写到 /static/</p>
     <div class="file-list">
-      将要写入：
       <code>/static/nova-chart.min.js</code>
       <code>/static/nova-chart.min.css</code>
       <code>/static/index.novachart.html</code>
@@ -45,8 +72,8 @@
     const setProgress = p => { bar.style.width = Math.max(0, Math.min(100, p)) + '%' }
 
     const FILES = [
-      { path: '/static/nova-chart.min.js', url: '/nova-chart.min.js' },
-      { path: '/static/nova-chart.min.css', url: '/nova-chart.min.css' },
+      { path: '/static/nova-chart.min.js',   url: '/nova-chart.min.js' },
+      { path: '/static/nova-chart.min.css',  url: '/nova-chart.min.css' },
       { path: '/static/index.novachart.html', url: '/index.novachart.html' }
     ]
     const fileToBytes = async e => {
@@ -77,7 +104,7 @@
           await esp.writeFile(it.path, it.bytes, pct => setProgress(base + (pct / items.length)))
         }
         setProgress(100)
-        setStatus('✅ 写入完成！ESP32 端访问 http://<esp32-ip>/static/index.novachart.html', 'ok')
+        setStatus('✅ 完成！访问 http://<esp32-ip>/static/index.novachart.html', 'ok')
       } catch (e) {
         setStatus('❌ ' + (e.message || e), 'error')
         console.error(e)
