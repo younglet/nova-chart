@@ -1,8 +1,7 @@
 /*!
  * NovaChart.js v0.1
  * https://github.com/yourname/nova-chart
- * (c) 2026 NovaChart Contributors
- * Released under the MIT License
+ * 专为 NovaMP 2.0 设计 · powered by stemstar
  *
  * A simplified charting library for Python beginners.
  * Inspired by Chart.js v4.5.0

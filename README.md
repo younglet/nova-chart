@@ -3,6 +3,7 @@
 > IoT 图表库。11KB min · 4 种图表（Bar / Line / Pie / Table）· 3 套主题。
 > 给烧了 MicroPython 的 ESP32 当 HTTP server 时的前端三件套之一。
 > 配套 [novajs](https://github.com/) + [nova-style](https://github.com/) + [nova-ui](https://github.com/)。
+> 后端推荐 [**nova-server**](../nova-server/)（MicroPython 异步 Web 框架）。
 
 ## ✨ 特性
 
@@ -73,8 +74,6 @@ npm run docs:build  # 构建静态站
 | API 字段 | 30+ | **8** |
 | 学习成本 | 数小时 | **5 分钟** |
 
-## 📄 License
+## 📜 License
 
-MIT © 2026 NovaChart Contributors
-
-Inspired by [Chart.js](https://www.chartjs.org/) (MIT)
+powered by stemstar

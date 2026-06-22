@@ -4,7 +4,7 @@
 
 ## 上传后做什么
 
-写个 MicroPython HTTP server（精简版 Flask / `nova-server` / 手写 socket 任意）把 `/static/` 目录 serve 出来即可。
+写个 MicroPython HTTP server（推荐 [**nova-server**](../../../nova-server/) ）把 `/static/` 目录 serve 出来即可。
 
 ## 在自己的网页里用
 
