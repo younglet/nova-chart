@@ -1,6 +1,10 @@
 import { defineConfig } from 'vitepress'
 
+// GitHub Pages project site uses /<repo>/ subpath; keep '/' for local dev.
+const base = process.env.GITHUB_ACTIONS ? '/nova-chart/' : '/'
+
 export default defineConfig({
+  base,
   title: 'NovaChart.js',
   description: '为 Python 基础学生打造的极简图表库',
   lang: 'zh-CN',
