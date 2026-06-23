@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nova-chart</title>
+  <link rel="stylesheet" href="nova-chart.min.css">
+  <link rel="stylesheet" href="nova-style.min.css">
+  <style>
+    body { font-family: system-ui; background: #f5f7fa; margin: 0; padding: 16px; }
+    h1 { text-align: center; color: #2c3e50; margin: 0 0 4px; font-size: 18px; }
+    .sub { text-align: center; color: #6b7280; font-size: 12px; margin: 0 0 16px; }
+    .row { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { margin: 0 0 8px; font-size: 14px; color: #374151; }
+    .status { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #6b7280; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
+    .dot.on { background: #10b981; }
+    .btn { padding: 4px 10px; font-size: 12px; background: #3b82f6; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>传感器实时图表</h1>
+  <p class="sub">数据来自 ESP32 的 <code>/api/sensors</code>（每 3 秒刷新）</p>
+
+  <div class="row">
+    <div class="card">
+      <h2>📈 温度趋势（折线图）</h2>
+      <div id="chart-line"></div>
+    </div>
+    <div class="card">
+      <h2>📊 通道分布（柱状图）</h2>
+      <div id="chart-bar"></div>
+    </div>
+  </div>
+
+  <div class="status" style="max-width:960px; margin: 16px auto 0;">
+    <span class="dot" id="dot"></span>
+    <span id="status">连接中…</span>
+    <button class="btn" id="refresh" style="margin-left:auto">手动刷新</button>
+  </div>
+
+  <script src="nova-chart.min.js"></script>
+  <script>
+    const dot = document.getElementById('dot')
+    const status = document.getElementById('status')
+    const MAX_POINTS = 20
+
+    // 滑动窗口数据
+    const data = { timestamps: [], temps: [] }
+
+    function renderLine () {
+      new NovaChart('chart-line', {
+        type: 'line',
+        title: '温度 (°C)',
+        labels: data.timestamps,
+        data: data.temps,
+        unit: '°C',
+        theme: 'ocean'
+      })
+    }
+
+    function renderBar (sensors) {
+      new NovaChart('chart-bar', {
+        type: 'bar',
+        title: '当前读数',
+        labels: sensors.map(s => s.name),
+        data: sensors.map(s => s.value),
+        unit: sensors[0] && sensors[0].unit || '',
+        theme: 'ocean'
+      })
+    }
+
+    async function tick () {
+      try {
+        const r = await fetch('/api/sensors', { cache: 'no-store' })
+        if (!r.ok) throw new Error('HTTP ' + r.status)
+        const s = await r.json()
+        // 假设 s = { timestamps: [...], temps: [...], channels: [{name, value, unit}] }
+        if (s.timestamps && s.temps) {
+          // 滑动窗口：超过 MAX_POINTS 就丢最旧的
+          if (s.timestamps.length > MAX_POINTS) {
+            s.timestamps = s.timestamps.slice(-MAX_POINTS)
+            s.temps = s.temps.slice(-MAX_POINTS)
+          }
+          data.timestamps = s.timestamps
+          data.temps = s.temps
+          renderLine()
+        }
+        if (s.channels) renderBar(s.channels)
+        dot.classList.add('on')
+        status.textContent = '已连接 · ' + new Date().toLocaleTimeString()
+      } catch (e) {
+        dot.classList.remove('on')
+        status.textContent = '断开 · ' + e.message
+      }
+    }
+
+    document.getElementById('refresh').onclick = tick
+    tick()
+    setInterval(tick, 3000)
+  </script>
+</body>
+</html>
