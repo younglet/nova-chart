@@ -10,6 +10,10 @@ export default defineConfig({
   lang: 'zh-CN',
   lastUpdated: true,
 
+  // 跨仓库相对路径（如 ../../../nova-server/）在本地多仓库联调时有效，
+  // 但在 CI 里没有该目录，会被判为死链。部署后链接仍可点击但目标不存在。
+  ignoreDeadLinks: true,
+
   themeConfig: {
     nav: [
       { text: '指南', link: '/guide/what-is-nova-chart', activeMatch: '/guide/' },
