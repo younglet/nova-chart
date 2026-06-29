@@ -168,7 +168,15 @@
   /**
    * 把数组包成 Proxy：set / delete / 数组方法调用时触发 onChange
    * 用 __novaReactive 标记避免重复包装
+   *
+   * ⚠️ 只拦截「变更方法」（push/pop/splice/...），不拦截只读方法
+   *    （forEach/map/filter/slice 会被 render 内部调用，拦截会死循环）
    */
+  const MUTATING_ARRAY_METHODS = new Set([
+    'push', 'pop', 'shift', 'unshift', 'splice',
+    'sort', 'reverse', 'fill', 'copyWithin'
+  ]);
+
   function makeReactiveArray(arr, onChange) {
     if (!isArray(arr) || arr.__novaReactive) return arr;
     Object.defineProperty(arr, '__novaReactive', {
@@ -191,8 +199,8 @@
       },
       get(target, key, receiver) {
         const v = Reflect.get(target, key, receiver);
-        // 拦截数组原生方法（push/pop/shift/unshift/splice/sort/reverse/fill/copyWithin）
-        if (typeof v === 'function' && typeof Array.prototype[key] === 'function') {
+        // 只拦截变更方法
+        if (typeof v === 'function' && MUTATING_ARRAY_METHODS.has(key)) {
           return function (...args) {
             const result = v.apply(target, args);
             onChange();
