@@ -457,7 +457,47 @@ class NovaChart {
 
 ---
 
-## 10. 不做清单（再强调）
+## 10. 反应式自动重绘（v0.3 新增）
+
+### 设计动机
+
+之前所有版本必须显式调 `chart.update()` 才能刷新图表，对 IoT 实时数据、动画数据场景不友好。
+v0.3 起，`chart.config.data` / `labels` 改为 **ES6 Proxy**，写入即重绘。
+
+### 实现要点
+
+| 点 | 决策 |
+|----|------|
+| 代理机制 | ES6 `Proxy`（零运行时依赖） |
+| 代理范围 | `config.data` / `config.labels` 数组；其他字段（theme/title/type/unit）只拦顶层 set |
+| 拦截方法 | set / delete / 变更方法（push/pop/shift/unshift/splice/sort/reverse/fill/copyWithin） |
+| 不拦截 | 只读方法（forEach/map/filter/slice/concat）—— 避免 render 内部循环 |
+| 去抖 | microtask，同帧多次写入只重绘 1 次 |
+| 跳过 | `chart.config.data = sameRef`（同引用）不触发 |
+| 销毁 | destroy 后再改不触发 |
+| 首次动画 | `draw()` 首次才放入场动画；Proxy / update 触发的重绘不动画 |
+
+### 代码增加量
+
+| 文件 | v0.2 → v0.3 |
+|------|-------------|
+| `nova-chart.js` | +约 80 行 |
+| `nova-chart.min.js` | 12.0KB → 12.8KB（+0.8KB） |
+
+### 兼容
+
+- `chart.update(newConfig)` 仍可用，向后兼容
+- 同引用赋值、`destroy` 后赋值、`forEach` 只读调用 都不重绘（不会误触发）
+- 内部访问数组走 Proxy get，不会因为 Proxy 造成性能下降（Proxy get 几乎无开销）
+
+### 限制
+
+- 二维 table 的内层 row 修改（`chart.config.data[0][1] = 99`）**不触发**重绘 —— 性能考虑。如需改内层，用 `chart.config.data = [...]` 整体替换。
+- microtask 去抖要求 `queueMicrotask`，兼容性 IE 11 不支持（但 ESP32 + 现代浏览器场景不受影响）
+
+---
+
+## 11. 不做清单（再强调）
 
 - ❌ TypeScript 重写
 - ❌ npm publish 流程

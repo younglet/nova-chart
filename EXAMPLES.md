@@ -314,6 +314,112 @@ new NovaChart('views', {
 
 ---
 
+## ⚡ 反应式自动重绘（v0.3 新增）
+
+> 这是上一版最常被问到的问题：「如果数据变了，怎么更新？」——答案是：**不用调任何方法，直接改 `config.data` 就会自动重绘**。
+
+`config.data` 和 `config.labels` 底层是 **Proxy**，写入时自动触发重绘：
+
+```js
+const chart = new NovaChart('myChart', {
+  type: 'bar',
+  title: '期末成绩',
+  labels: ['语文', '数学', '英语'],
+  data: [85, 92, 78],
+  unit: '分',
+  animation: 'none'  // 实时数据场景用 'none' 避免闪烁
+}).draw();
+
+// ✅ 直接修改，自动重绘（无需 .update()）
+chart.config.data[0] = 95;
+chart.config.data.push(88);
+chart.config.data = [70, 80, 90];          // 整体替换
+chart.config.labels = ['甲', '乙', '丙'];
+chart.config.theme = 'dark';
+chart.config.title = '最新成绩';
+```
+
+### 案例 6：IoT 实时温度（setInterval）
+
+```js
+new NovaChart('temp', {
+  type: 'line',
+  title: '室内温度',
+  labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+  data: [22, 21, 23, 26, 28, 25],
+  unit: '°C',
+  animation: 'none'
+}).draw();
+
+setInterval(() => {
+  const data = temp.config.data;
+  data.shift();                            // 丢最老的
+  data.push(20 + Math.random() * 10);      // 加最新的
+}, 5000);
+```
+
+### 案例 7：点击按钮动态改数据
+
+```html
+<button onclick="myChart.config.data = myChart.config.data.map(v => v * 2)">
+  全部 × 2
+</button>
+```
+
+### 案例 8：主题切换器
+
+```js
+document.querySelector('#theme-toggle').onclick = () => {
+  const themes = ['ocean', 'sunset', 'dark'];
+  const cur = myChart.config.theme;
+  const next = themes[(themes.indexOf(cur) + 1) % 3];
+  myChart.config.theme = next;   // 自动重绘
+};
+```
+
+### 案例 9：实时计数器
+
+```js
+new NovaChart('counter', {
+  type: 'bar',
+  labels: ['点击', '购买', '退订'],
+  data: [0, 0, 0],
+  unit: '人',
+  animation: 'none'
+}).draw();
+
+// 10秒内随机推增
+setInterval(() => {
+  counter.config.data[0]++;
+  if (Math.random() > 0.5) counter.config.data[1]++;
+}, 100);
+```
+
+### 反应式机制说明
+
+| 操作 | 是否触发重绘 |
+|------|--------------|
+| `chart.config.data = [...]` | ✅ |
+| `chart.config.data.push(x)` | ✅ |
+| `chart.config.data[i] = x` | ✅ |
+| `chart.config.data.pop()` / `shift()` / `splice()` / `sort()` / `reverse()` | ✅ |
+| `chart.config.labels = [...]` | ✅ |
+| `chart.config.theme = 'dark'` | ✅ |
+| `chart.config.title = 'X'` | ✅ |
+| `chart.config.type = 'line'` | ✅ |
+| `chart.config.data = chart.config.data`（同引用） | ❌（跳过） |
+| `chart.config.data.forEach(...)` / `.map(...)` / `.filter(...)` | ❌（只读方法） |
+| `chart.config.data` 销毁后再改 | ❌ |
+
+**性能特性**：
+- **microtask 去抖** —— 同一帧多次写入只重绘 1 次（如 IoT 轮询高频更新）
+- **只拦截变更方法** —— 内部 render 用的 `forEach`/`map` 不会触发死循环
+- **零运行时依赖** —— 用 ES6 Proxy，不引入第三方
+
+> 💡 **常见问题**：之前用 `chart.update()` 的代码仍然兼容——只是多数场景不再需要。
+
+---
+
 ## 🎬 动画（精简版）
 
 | 值 | 效果 | 适用 |

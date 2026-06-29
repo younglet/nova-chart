@@ -77,6 +77,63 @@ chart.update({
 
 **返回值**：`this`
 
+> 💡 **大多数场景不再需要 `.update()`** —— 直接改 `chart.config.data` 也会自动重绘（见下方「反应式」）。`.update()` 主要用于一次性批量替换配置或只想触发一次重绘的场景。
+
+---
+
+### ⚡ 反应式自动重绘（v0.3 新增）
+
+`config.data` / `config.labels` 底层是 **Proxy**，写入时**自动触发重绘**，无需手动调 `update()`：
+
+```js
+const chart = new NovaChart('myChart', {
+  type: 'bar',
+  labels: ['A', 'B', 'C'],
+  data: [10, 20, 30]
+}).draw();
+
+// ✅ 全部自动重绘
+chart.config.data.push(40);                    // 数组方法
+chart.config.data[0] = 999;                    // 索引赋值
+chart.config.data = [50, 60, 70];              // 整体替换
+chart.config.labels = ['甲', '乙', '丙'];      // labels 改
+chart.config.theme = 'dark';                   // 主题切换
+chart.config.title = '实时温度';               // 标题改
+chart.config.type = 'line';                    // 图表类型切换
+
+// ✅ 反向引用也保留响应
+const arr = chart.config.data;
+arr.push(99);    // chart.config.data 同步更新，图表重绘
+```
+
+**机制**：
+- **microtask 去抖**：同一帧连续多次写入只重绘 1 次（如 IoT 轮询）
+- **变更方法触发**：push / pop / shift / unshift / splice / sort / reverse / fill / copyWithin
+- **只读方法不触发**：forEach / map / filter / slice（避免 render 内部循环触发）
+- **相同值跳过**：`chart.config.data = chart.config.data` 不会重绘
+- **destroy 后停止**：销毁后再改 data 不再触发
+
+**典型场景**：
+
+```js
+// IoT 传感器轮询
+setInterval(() => {
+  chart.config.data = readSensor();   // 直接赋值，自动重绘
+}, 1000);
+
+// 实时计数器
+setInterval(() => {
+  chart.config.data[0]++;
+}, 16);
+
+// 主题切换器
+document.querySelector('#theme-toggle').onclick = () => {
+  chart.config.theme = chart.config.theme === 'ocean' ? 'dark' : 'ocean';
+};
+```
+
+> ⚠️ **二维 table 内层 row 的修改不会触发顶层重绘**（性能考虑）。如需改内层，用外层 `.data = [...]` 整体替换。
+
 ---
 
 ### `.destroy()`
@@ -139,11 +196,13 @@ console.log(NovaChart.themes.dark.palette);
 ## 生命周期图
 
 ```
-new NovaChart(id, config)   ← 配置校验，保存状态
+new NovaChart(id, config)   ← 配置校验，包成反应式 Proxy
        ↓
-   .draw()                   ← 渲染到 DOM，触发动画
+   .draw()                   ← 渲染到 DOM，触发动画（仅一次）
        ↓
-   .update(newConfig?)       ← 局部更新
+   chart.config.data = …     ← 自动重绘（无需 update）
+       ↓
+   .update(newConfig?)       ← 批量替换配置（可选，仍兼容）
        ↓
    .destroy()                ← 清理
 ```
