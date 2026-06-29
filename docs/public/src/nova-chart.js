@@ -158,6 +158,89 @@
   }
 
   // ============================================================
+  // 3.5 反应式（自动重绘）
+  //   - Proxy 拦截 config.data / labels 的写入
+  //   - 数组方法 push/pop/shift/unshift/splice/sort/reverse/fill 全部拦截
+  //   - microtask 去抖，连续多次写入只重绘一次
+  //   - 外部调用 `chart.update()` 仍保留（向后兼容）
+  // ============================================================
+
+  /**
+   * 把数组包成 Proxy：set / delete / 数组方法调用时触发 onChange
+   * 用 __novaReactive 标记避免重复包装
+   */
+  function makeReactiveArray(arr, onChange) {
+    if (!isArray(arr) || arr.__novaReactive) return arr;
+    Object.defineProperty(arr, '__novaReactive', {
+      value: true,
+      enumerable: false,
+      configurable: true,
+      writable: false
+    });
+    return new Proxy(arr, {
+      set(target, key, value, receiver) {
+        if (target[key] === value) return true; // 无变化跳过
+        const ok = Reflect.set(target, key, value, receiver);
+        if (ok) onChange();
+        return ok;
+      },
+      deleteProperty(target, key) {
+        const ok = Reflect.deleteProperty(target, key);
+        if (ok) onChange();
+        return ok;
+      },
+      get(target, key, receiver) {
+        const v = Reflect.get(target, key, receiver);
+        // 拦截数组原生方法（push/pop/shift/unshift/splice/sort/reverse/fill/copyWithin）
+        if (typeof v === 'function' && typeof Array.prototype[key] === 'function') {
+          return function (...args) {
+            const result = v.apply(target, args);
+            onChange();
+            return result;
+          };
+        }
+        return v;
+      }
+    });
+  }
+
+  /**
+   * 把 config 包成 Proxy：data/labels 字段新赋值若是数组，自动包成反应式
+   * 其他字段（type/title/unit/theme/yPadding/animation）写入也触发 onChange
+   */
+  function makeReactiveConfig(cfg, onChange) {
+    return new Proxy(cfg, {
+      set(target, key, value, receiver) {
+        if (target[key] === value) return true;
+        if ((key === 'data' || key === 'labels') && isArray(value) && !value.__novaReactive) {
+          value = makeReactiveArray(value, onChange);
+        }
+        const ok = Reflect.set(target, key, value, receiver);
+        if (ok) onChange();
+        return ok;
+      }
+    });
+  }
+
+  /**
+   * microtask 去抖调度器
+   * - 同一帧内多次 schedule 只执行 1 次
+   * - _destroyed / _suppress 时直接丢弃
+   */
+  function makeScheduler(self) {
+    let pending = false;
+    return () => {
+      if (pending || self._destroyed || self._suppress) return;
+      pending = true;
+      queueMicrotask(() => {
+        pending = false;
+        if (self._destroyed) return;
+        self._renderNow();
+      });
+    };
+  }
+
+  // ============================================================
   // 4. 简易动画器 (Animator)
   // ============================================================
   const Animator = {
@@ -687,13 +770,22 @@
 
   // ============================================================
   // 10. NovaChart 主类
+  //   - this._schedule 由构造函数末尾注册
   // ============================================================
   class NovaChart {
     constructor(target, userConfig) {
-      // 配置合并 + 校验
-      this.config = this._validate(Object.assign({}, DEFAULTS, userConfig));
-      this.theme  = THEMES[this.config.theme] || THEMES.ocean;
+      // 状态标记（必须在 scheduler 创建前）
       this._destroyed = false;
+      this._firstDraw = false;
+      this._suppress  = false;
+
+      // 反应式调度器（data/labels 写入时自动重绘）
+      // 必须在 _makeReactive 之前创建
+      this._schedule = makeScheduler(this);
+
+      // 配置合并 + 校验（先用 plain 对象校验）
+      const merged = this._validate(Object.assign({}, DEFAULTS, userConfig));
+      this.theme = THEMES[merged.theme] || THEMES.ocean;
 
       // 查找容器（支持 ID 或 DOM 元素）
       this.container = isString(target)
@@ -702,6 +794,23 @@
       if (!this.container) {
         throw new Error(`NovaChart: container "${target}" not found`);
       }
+
+      // 包成反应式 config（data/labels 数组也会被 Proxy 化）
+      this.config = this._makeReactive(merged);
+    }
+
+    /**
+     * 把 data / labels 包成 Proxy，整体 config 也包成 Proxy
+     * 多次构造同一对象是安全的（通过 __novaReactive 标记）
+     */
+    _makeReactive(obj) {
+      if (isArray(obj.data) && !obj.data.__novaReactive) {
+        obj.data = makeReactiveArray(obj.data, this._schedule);
+      }
+      if (isArray(obj.labels) && !obj.labels.__novaReactive) {
+        obj.labels = makeReactiveArray(obj.labels, this._schedule);
+      }
+      return makeReactiveConfig(obj, this._schedule);
     }
 
     _validate(cfg) {
@@ -744,15 +853,31 @@
     draw() {
       if (this._destroyed) return this;
 
+      this._renderNow();
+
+      // 入场动画只在首次 draw 触发；Proxy 自动调度走 _renderNow 不放动画
+      if (!this._firstDraw) {
+        this._animateEntry();
+        this._firstDraw = true;
+      }
+      return this;
+    }
+
+    /**
+     * 实际绘制（不放动画）
+     * Proxy 自动调度 / update() 都走这个
+     */
+    _renderNow() {
+      if (this._destroyed) return;
+
+      // 主题可能改了，重新读一次
+      this.theme = THEMES[this.config.theme] || THEMES.ocean;
+
       if (this.config.type === 'table') {
         this._drawTable();
       } else {
         this._drawCanvas();
       }
-
-      // 入场动画（容器级）
-      this._animateEntry();
-      return this;
     }
 
     _drawTable() {
@@ -827,10 +952,16 @@
     update(newConfig) {
       if (this._destroyed) return this;
       if (newConfig) {
-        this.config = this._validate(Object.assign({}, this.config, newConfig));
-        this.theme  = THEMES[this.config.theme] || THEMES.ocean;
+        // 校验时关掉 schedule（_validate 读 Proxy 不 schedule，但保险起见）
+        // 之后 _makeReactive 内的 set 会 schedule——用 _suppress 抑制
+        const merged = this._validate(Object.assign({}, this.config, newConfig));
+        this._suppress = true;
+        this.config = this._makeReactive(merged);
+        this._suppress = false;
+        this.theme = THEMES[this.config.theme] || THEMES.ocean;
       }
-      this.draw();
+      // update() 走 _renderNow（不放入场动画，避免重复 update 时闪烁）
+      this._renderNow();
       return this;
     }
 

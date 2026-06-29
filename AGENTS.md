@@ -47,8 +47,11 @@ nova-chart/
 │   └── nova-chart.min.css
 ├── scripts/
 │   ├── esp32-serial.js             ← Web Serial 写文件到 ESP32
-│   └── sync-public.js              ← 把 src / demo / index.novachart.html 同步到 docs/public/
-├── index.novachart.html            ← ESP32 /static/ 入口 HTML
+│   └── sync-public.js              ← 把 src / usage / usage/index.novachart.html / usage/demo 同步到 docs/public/
+├── (index.novachart.html 已移入 usage/)            ← ESP32 /static/ 入口 HTML
+├── usage/                          ← 案例与部署模板目录
+│   ├── index.novachart.html       ← ESP32 /static/ 入口 HTML
+│   └── demo/index.html             ← 12 个学生案例 demo
 └── docs/                           ← VitePress 文档
     └── public/demo/index.html       ← 离线 demo（VitePress 访问 demo/）
     └── .vitepress/

@@ -38,8 +38,9 @@
 - `nova-chart.js` — 主库（628 行，18KB）
 - `nova-chart.css` — 样式
 - `README.md` — 本文件
-- `demo/`
-  - `index.html` — 学生案例 demo（12 个）
+- `usage/`
+  - `index.novachart.html` — ESP32 部署模板
+  - `demo/index.html` — 学生案例 demo（12 个）
 - `docs/` — VitePress 官方站
   - `.vitepress/`
     - `config.mjs`

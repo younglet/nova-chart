@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>NovaChart 反应式测试</title>
+  <link rel="stylesheet" href="src/nova-chart.css">
+  <style>
+    body { font-family: -apple-system, "PingFang SC", sans-serif; padding: 20px; background: #f5f7fa; }
+    h2 { color: #2C3E50; margin-top: 24px; }
+    .card { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    button { padding: 8px 14px; margin: 4px; border: none; border-radius: 6px; background: #4A90E2; color: #fff; cursor: pointer; font-size: 13px; }
+    button:hover { background: #357ABD; }
+    button.warn { background: #FFA94D; }
+    button.ok   { background: #6BCB77; }
+    pre { background: #2C3E50; color: #F8FAFC; padding: 8px; border-radius: 6px; font-size: 12px; overflow-x: auto; }
+    .ok::before { content: '✓ '; color: #6BCB77; font-weight: bold; }
+    .fail::before { content: '✗ '; color: #FF6B6B; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🌟 NovaChart 反应式测试</h1>
+
+  <div class="card">
+    <h2>1. 改 chart.config.data → 自动重绘</h2>
+    <div id="c1"></div>
+    <button onclick="t1()">c1.data = [50, 80, 30, 95, 60]</button>
+    <button onclick="t1b()">c1.data.push(99)</button>
+    <button onclick="t1c()">c1.data[0] = 0</button>
+    <button onclick="t1d()">c1.data.pop()</button>
+    <pre id="r1"></pre>
+  </div>
+
+  <div class="card">
+    <h2>2. 改 chart.config.title → 自动重绘</h2>
+    <div id="c2"></div>
+    <button onclick="t2()">改标题为「实时温度」</button>
+    <pre id="r2"></pre>
+  </div>
+
+  <div class="card">
+    <h2>3. 改 chart.config.theme → 自动重绘</h2>
+    <div id="c3"></div>
+    <button onclick="t3()">切到 sunset</button>
+    <button onclick="t3b()">切到 dark</button>
+    <button onclick="t3c()">切回 ocean</button>
+    <pre id="r3"></pre>
+  </div>
+
+  <div class="card">
+    <h2>4. 多写一次只重绘一次（microtask 去抖）</h2>
+    <div id="c4"></div>
+    <button onclick="t4()">连续改 5 次</button>
+    <pre id="r4"></pre>
+  </div>
+
+  <div class="card">
+    <h2>5. update() 仍然兼容</h2>
+    <div id="c5"></div>
+    <button onclick="t5()">update({ data: [...] })</button>
+    <pre id="r5"></pre>
+  </div>
+
+  <div class="card">
+    <h2>6. 表格二维数据自动更新</h2>
+    <div id="c6"></div>
+    <button onclick="t6()">改某行成绩</button>
+    <button onclick="t6b()">新增一行</button>
+    <pre id="r6"></pre>
+  </div>
+
+  <div class="card">
+    <h2>7. 模拟 IoT 实时数据（setInterval）</h2>
+    <div id="c7"></div>
+    <button onclick="t7()">开始</button>
+    <button onclick="t7b()">停止</button>
+    <pre id="r7"></pre>
+  </div>
+
+  <script src="src/nova-chart.js"></script>
+  <script>
+    let renderCount = { c1: 0, c2: 0, c3: 0, c4: 0, c5: 0, c6: 0, c7: 0 };
+
+    // 拦截 _renderNow 计数
+    const _origRender = NovaChart.prototype._renderNow;
+    NovaChart.prototype._renderNow = function () {
+      const id = this.container.id;
+      if (renderCount[id] !== undefined) renderCount[id]++;
+      _origRender.call(this);
+    };
+
+    // ===== 1. 改 data =====
+    const c1 = new NovaChart('c1', {
+      type: 'bar',
+      title: '测试 1',
+      labels: ['A', 'B', 'C', 'D', 'E'],
+      data: [10, 20, 30, 40, 50],
+      animation: 'none'
+    });
+    c1.draw();
+    function t1()  { c1.config.data = [50, 80, 30, 95, 60]; }
+    function t1b() { c1.config.data.push(99); }
+    function t1c() { c1.config.data[0] = 0; }
+    function t1d() { c1.config.data.pop(); }
+    function logR1() {
+      document.getElementById('r1').textContent =
+        `data = [${c1.config.data.join(', ')}], render 调用次数 = ${renderCount.c1}`;
+    }
+    [t1, t1b, t1c, t1d].forEach(fn => setTimeout(fn, 50));
+    setTimeout(logR1, 200);
+
+    // ===== 2. 改 title =====
+    const c2 = new NovaChart('c2', {
+      type: 'line',
+      title: '原标题',
+      labels: ['1', '2', '3'],
+      data: [10, 20, 30],
+      animation: 'none'
+    });
+    c2.draw();
+    function t2() { c2.config.title = '实时温度'; }
+    function logR2() {
+      document.getElementById('r2').textContent =
+        `title = "${c2.config.title}", render 调用次数 = ${renderCount.c2}`;
+    }
+    setTimeout(t2, 50);
+    setTimeout(logR2, 200);
+
+    // ===== 3. 改 theme =====
+    const c3 = new NovaChart('c3', {
+      type: 'pie',
+      title: '测试主题切换',
+      labels: ['A', 'B', 'C'],
+      data: [10, 20, 30],
+      theme: 'ocean',
+      animation: 'none'
+    });
+    c3.draw();
+    function t3()  { c3.config.theme = 'sunset'; }
+    function t3b() { c3.config.theme = 'dark'; }
+    function t3c() { c3.config.theme = 'ocean'; }
+    function logR3() {
+      document.getElementById('r3').textContent =
+        `theme = "${c3.config.theme}", render 调用次数 = ${renderCount.c3}`;
+    }
+    setTimeout(t3, 50); setTimeout(t3b, 200); setTimeout(t3c, 400);
+    setTimeout(logR3, 600);
+
+    // ===== 4. microtask 去抖 =====
+    const c4 = new NovaChart('c4', {
+      type: 'bar',
+      title: '去抖测试',
+      labels: ['A', 'B', 'C'],
+      data: [10, 20, 30],
+      animation: 'none'
+    });
+    c4.draw();
+    function t4() {
+      const before = renderCount.c4;
+      c4.config.data[0] = 1;
+      c4.config.data[1] = 2;
+      c4.config.data[2] = 3;
+      c4.config.title = '改一下';
+      c4.config.data.push(99);
+      setTimeout(() => {
+        document.getElementById('r4').textContent =
+          `连续改 5 次，render 次数变化 = ${renderCount.c4 - before}（期望 1）`;
+      }, 100);
+    }
+
+    // ===== 5. update() 兼容 =====
+    const c5 = new NovaChart('c5', {
+      type: 'line',
+      title: 'update 测试',
+      labels: ['A', 'B'],
+      data: [10, 20],
+      animation: 'none'
+    });
+    c5.draw();
+    function t5() {
+      const before = renderCount.c5;
+      c5.update({ data: [88, 99], title: '已 update' });
+      setTimeout(() => {
+        document.getElementById('r5').textContent =
+          `update() 后 data = [${c5.config.data.join(', ')}], render 增量 = ${renderCount.c5 - before}（期望 1）`;
+      }, 100);
+    }
+
+    // ===== 6. 表格多行 =====
+    const c6 = new NovaChart('c6', {
+      type: 'table',
+      title: '班级成绩',
+      labels: ['语文', '数学', '英语'],
+      data: [
+        ['张三', 85, 92, 78],
+        ['李四', 75, 88, 82]
+      ],
+      animation: 'none'
+    });
+    c6.draw();
+    function t6()  { c6.config.data[0][1] = 100; }     // 改行
+    function t6b() { c6.config.data.push(['王五', 90, 95, 88]); }
+    function logR6() {
+      document.getElementById('r6').textContent =
+        `行数 = ${c6.config.data.length}, render = ${renderCount.c6}`;
+    }
+    setTimeout(t6, 50); setTimeout(logR6, 200);
+
+    // ===== 7. IoT 实时 =====
+    const c7 = new NovaChart('c7', {
+      type: 'line',
+      title: '温度实时',
+      labels: ['1', '2', '3', '4', '5'],
+      data: [22, 23, 24, 23, 22],
+      animation: 'none'
+    });
+    c7.draw();
+    let iv = null;
+    function t7() {
+      if (iv) return;
+      iv = setInterval(() => {
+        const arr = c7.config.data;
+        arr.push(20 + Math.random() * 8);
+        if (arr.length > 10) arr.shift();
+        c7.config.labels.push(String(arr.length));
+        if (c7.config.labels.length > 10) c7.config.labels.shift();
+      }, 500);
+    }
+    function t7b() { clearInterval(iv); iv = null; }
+    setTimeout(t7, 50);
+    setTimeout(() => {
+      document.getElementById('r7').textContent =
+        `运行 3 秒后 data.length = ${c7.config.data.length}, render 次数 = ${renderCount.c7}（期望 ~6）`;
+      t7b();
+    }, 3000);
+  </script>
+</body>
+</html>
