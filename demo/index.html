@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NovaChart.js — 学生案例 Demo</title>
-  <link rel="stylesheet" href="../nova-chart.css">
+  <link rel="stylesheet" href="../../src/nova-chart.min.css">
+  <link rel="stylesheet" href="../../src/nova-style.min.css">
   <style>
     body {
       font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -145,9 +146,39 @@
       <div class="demo-label">本次月考班级排名 (dark)</div>
       <div id="table-dark"></div>
     </div>
+
+    <div class="group-title">⚡ 反应式 (v0.3 新增)</div>
+
+    <!-- 反应式：自动重绘 -->
+    <div class="demo-card">
+      <div class="demo-label">⚡ 改 chart.config.data 自动重绘 (ocean)</div>
+      <div id="reactive-bar"></div>
+      <button onclick="reactiveDemo.pushOne()" style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#4A90E2;color:#fff;cursor:pointer;">push(随机数)</button>
+      <button onclick="reactiveDemo.popOne()"  style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#F5A623;color:#fff;cursor:pointer;">pop()</button>
+      <button onclick="reactiveDemo.replaceAll()" style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#7B61FF;color:#fff;cursor:pointer;">data = [全新数组]</button>
+      <button onclick="reactiveDemo.start()"  style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#50C9C3;color:#fff;cursor:pointer;">▶ 开始动起来</button>
+      <button onclick="reactiveDemo.stop()"   style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#FF6B6B;color:#fff;cursor:pointer;">⏸ 停止</button>
+    </div>
+
+    <!-- 反应式：theme 自动切换 -->
+    <div class="demo-card">
+      <div class="demo-label">⚡ 改 chart.config.theme 自动重绘</div>
+      <div id="reactive-theme"></div>
+      <button onclick="themeDemo.ocean()"  style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#4A90E2;color:#fff;cursor:pointer;">ocean</button>
+      <button onclick="themeDemo.sunset()" style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#FFA94D;color:#fff;cursor:pointer;">sunset</button>
+      <button onclick="themeDemo.dark()"   style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#282A36;color:#fff;cursor:pointer;">dark</button>
+    </div>
+
+    <!-- 反应式：table 二维顶层 -->
+    <div class="demo-card">
+      <div class="demo-label">⚡ Table 多行 push / 索引赋值自动重绘</div>
+      <div id="reactive-table"></div>
+      <button onclick="tableDemo.addRow()"  style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#6BCB77;color:#fff;cursor:pointer;">新增一行</button>
+      <button onclick="tableDemo.editRow()" style="margin:6px 4px 0 0;padding:6px 12px;border:none;border-radius:6px;background:#FFD93D;color:#fff;cursor:pointer;">改首行分数</button>
+    </div>
   </div>
 
-  <script src="../nova-chart.js"></script>
+  <script src="../../src/nova-chart.min.js"></script>
   <script>
     // ===== 成绩 / 学习 =====
     new NovaChart('bar-ocean', {
@@ -286,6 +317,86 @@
       unit: '名',
       theme: 'dark'
     }).draw();
+
+    // ===== ⚡ 反应式 demo =====
+    // 注意：所有 demo 都用 animation: 'none' 避免重复播放入场动画
+    const reactiveChart = new NovaChart('reactive-bar', {
+      type: 'bar',
+      title: '反应式柱状图',
+      labels: ['1', '2', '3', '4', '5'],
+      data: [10, 20, 30, 40, 50],
+      unit: '个',
+      theme: 'ocean',
+      animation: 'none'
+    }).draw();
+    const reactiveDemo = {
+      pushOne() {
+        reactiveChart.config.data.push(Math.floor(Math.random() * 100));
+      },
+      popOne() {
+        reactiveChart.config.data.pop();
+      },
+      replaceAll() {
+        // 直接赋一个新数组 —— 自动包成 Proxy，无需手动 update()
+        reactiveChart.config.data = [
+          Math.random() * 100,
+          Math.random() * 100,
+          Math.random() * 100
+        ];
+        reactiveChart.config.labels = ['甲', '乙', '丙'];
+      },
+      _iv: null,
+      start() {
+        if (this._iv) return;
+        this._iv = setInterval(() => {
+          // 同时改两个字段，只触发一次重绘（microtask 去抖）
+          reactiveChart.config.data = reactiveChart.config.data.map(() => Math.random() * 100);
+          reactiveChart.config.title = '反应式柱状图 — ' + new Date().toLocaleTimeString();
+        }, 800);
+      },
+      stop() {
+        clearInterval(this._iv);
+        this._iv = null;
+      }
+    };
+
+    const themeChart = new NovaChart('reactive-theme', {
+      type: 'pie',
+      title: '主题切换测试',
+      labels: ['A', 'B', 'C', 'D'],
+      data: [25, 35, 20, 20],
+      unit: '%',
+      animation: 'none'
+    }).draw();
+    const themeDemo = {
+      ocean()  { themeChart.config.theme = 'ocean'; },
+      sunset() { themeChart.config.theme = 'sunset'; },
+      dark()   { themeChart.config.theme = 'dark'; }
+    };
+
+    const reactiveTable = new NovaChart('reactive-table', {
+      type: 'table',
+      title: '实时成绩单',
+      labels: ['语文', '数学', '英语'],
+      data: [
+        ['张三', 85, 92, 78],
+        ['李四', 75, 88, 82]
+      ],
+      unit: '分',
+      theme: 'ocean',
+      animation: 'none'
+    }).draw();
+    const tableDemo = {
+      addRow() {
+        const names = ['王五', '赵六', '钱七', '孙八', '周九'];
+        const name = names[Math.floor(Math.random() * names.length)];
+        reactiveTable.config.data.push([name, 60 + Math.random() * 40 | 0, 60 + Math.random() * 40 | 0, 60 + Math.random() * 40 | 0]);
+      },
+      editRow() {
+        // 修改首行数据
+        reactiveTable.config.data[0][1] = 60 + Math.random() * 40 | 0;
+      }
+    };
   </script>
 </body>
 </html>
