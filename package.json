@@ -1,7 +1,7 @@
 {
-  "name": "nova-chart-docs",
-  "version": "0.1.0",
-  "private": true,
+  "name": "nova-chart",
+  "version": "0.3.0",
+  "private": false,
   "type": "module",
   "scripts": {
     "build": "terser src/nova-chart.js -c -m -o src/nova-chart.min.js && csso src/nova-chart.css -o src/nova-chart.min.css",
@@ -16,5 +16,22 @@
     "csso-cli": "^4.0.2",
     "terser": "^5.48.0",
     "vitepress": "^1.6.3"
+  },
+  "description": "IoT 图表库。11KB min · 4 种图表（Bar / Line / Pie / Table）· 3 套主题。",
+  "license": "MIT",
+  "author": "stemstar <https://github.com/younglet>",
+  "keywords": [
+    "chart",
+    "data-visualization",
+    "iot",
+    "canvas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/younglet/nova-chart.git"
+  },
+  "homepage": "https://younglet.github.io/nova-chart/",
+  "bugs": {
+    "url": "https://github.com/younglet/nova-chart/issues"
   }
 }

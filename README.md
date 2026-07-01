@@ -1,5 +1,7 @@
 # 🌟 NovaChart.js
 
+[![License](https://img.shields.io/github/license/younglet/nova-chart)](https://github.com/younglet/nova-chart/blob/main/LICENSE) [![GitHub stars](https://img.shields.io/github/stars/younglet/nova-chart.svg)](https://github.com/younglet/nova-chart) [![Docs](https://img.shields.io/badge/Docs-nova-chart.app-blueviolet.svg)](https://younglet.github.io/nova-chart/) ![Size](https://img.shields.io/badge/Size-11KB_min-orange.svg)
+
 > IoT 图表库。11KB min · 4 种图表（Bar / Line / Pie / Table）· 3 套主题。
 > 给烧了 MicroPython 的 ESP32 当 HTTP server 时的前端三件套之一。
 > 配套 [novajs](https://github.com/younglet/novajs) + [nova-style](https://github.com/younglet/nova-style) + [nova-ui](https://github.com/younglet/nova-ui)。

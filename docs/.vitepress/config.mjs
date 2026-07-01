@@ -4,10 +4,11 @@ import { defineConfig } from 'vitepress'
 const base = process.env.GITHUB_ACTIONS ? '/nova-chart/' : '/'
 
 export default defineConfig({
+  siteTitle: 'NovaChart.js',
   repo: 'https://github.com/younglet/nova-chart',
   base,
   title: 'NovaChart.js',
-  description: '为 Python 基础学生打造的极简图表库',
+  description: 'IoT 图表库。11KB min · 4 种图表（Bar / Line / Pie / Table）· 3 套主题 · 给烧了 MicroPython 的 ESP32 当 HTTP server 时用。',
   lang: 'zh-CN',
   lastUpdated: true,
 
@@ -95,7 +96,8 @@ export default defineConfig({
   },
 
   head: [
-    ['meta', { name: 'theme-color', content: '#00F5FF' }],
+    ['link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }],
+    ['meta', { name: 'theme-color', content: '#10b981' }],
     ['meta', { property: 'og:title', content: 'NovaChart.js' }],
     ['meta', { property: 'og:description', content: '为 Python 基础学生打造的极简图表库' }],
     ['link', { rel: 'stylesheet', href: '/nova-chart.css' }],
