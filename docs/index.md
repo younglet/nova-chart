@@ -4,7 +4,7 @@ layout: home
 hero:
   name: NovaChart
   text: 极简图表，学一招通四招
-  tagline: 为 Python 基础学生打造的轻量图表库 — 4 种图表、3 套主题、零学习成本、表格自动识别一维/二维
+  tagline: 11 KB min · 4 种图表 · 3 套主题 · 配合 novajs 在 ESP32 上当仪表盘图表
   actions:
     - theme: brand
       text: 快速开始
