@@ -18,7 +18,7 @@
     "vitepress": "^1.6.3"
   },
   "description": "IoT 图表库。11KB min · 4 种图表（Bar / Line / Pie / Table）· 3 套主题。",
-  "license": "MIT",
+  "license": "CC-BY-NC-4.0",
   "author": "stemstar <https://github.com/younglet>",
   "keywords": [
     "chart",
