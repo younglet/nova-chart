@@ -115,7 +115,8 @@ new NovaChart('myChart', {
 }).draw();  // 其余全部走默认
 ```
 
-> 💡 **学生只要改 4 行**：`type` + `labels` + `data` + 可选 `title`，其他都不用管。
+> 💡 **学生只要改 3 行**：`type` + `data`（传对象自动拆为 labels/data）+ 可选 `title`，其他都不用管。
+> 也可分开传 `labels` 和 `data` 数组。
 
 ---
 

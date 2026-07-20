@@ -100,7 +100,7 @@ class NovaChart {
 | `type` | `'bar' \| 'line' \| 'pie' \| 'table'` | ✅ | — | 图表类型 |
 | `title` | `string` | ❌ | `''` | 标题，显示在顶部 |
 | `labels` | `string[]` | ✅ | — | X 轴 / 扇区标签 |
-| `data` | `number[]` \| `number[][]` | ✅ | — | 单组与 labels 等长；二维时仅 `table` 有效，首列元素作行名 |
+| `data` | `number[]` \| `number[][]` \| `object` | ✅ | — | 单组与 labels 等长；二维时仅 `table` 有效；传对象自动拆为 labels/data |
 | `unit` | `string` | ❌ | `''` | 单位，拼到 tooltip 和数据表 |
 | `theme` | `'ocean' \| 'sunset' \| 'dark'` | ❌ | `'ocean'` | 主题名 |
 | `showTable` | `boolean` | ❌ | `false` | 是否渲染数据表 |

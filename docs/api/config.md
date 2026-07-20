@@ -83,6 +83,8 @@ X 轴标签 / 扇区标签。
 { data: [40, 15, 20, 25] }     // Pie 用，比例自动计算
 ```
 
+`data` 也可传对象（键作 labels、值作 data），或分开传 `labels` + `data` 数组。
+
 **长度规则**：`data.length === labels.length`
 
 ### 二维 `number[][]`（多行表格，**仅 `table` 支持**）
@@ -225,7 +227,7 @@ new NovaChart('myChart', {
 | `theme` 无效 | warn + 回退到 `'ocean'` |
 | `labels` / `data` 长度不等 | warn，不阻塞渲染 |
 | `table` 的某行长度不等于 `labels.length + 1` | warn，不阻塞渲染 |
-| `labels` / `data` 不是数组 | throw 异常 |
+| `data` 不是数组也不是对象 | throw 异常 |
 | `bar` / `line` / `pie` 误传二维 `data` | warn + 自动取第一行 |
 | 找不到目标元素 | throw 异常 |
 

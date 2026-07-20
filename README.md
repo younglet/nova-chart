@@ -31,6 +31,15 @@
     unit: '分',
     theme: 'ocean'
   }).draw();
+
+// 也支持直接传对象（键作 labels，值作 data）
+new NovaChart('myChart', {
+  type: 'bar',
+  title: '月考成绩',
+  data: {'语文':85, '数学':92, '英语':78, '物理':88, '化学':90},
+  unit: '分',
+  theme: 'ocean'
+}).draw();
 </script>
 ```
 
