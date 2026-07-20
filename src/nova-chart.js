@@ -866,14 +866,25 @@
 
     draw() {
       if (this._destroyed) return this;
-
       this._renderNow();
-
-      // 入场动画只在首次 draw 触发；Proxy 自动调度走 _renderNow 不放动画
       if (!this._firstDraw) {
         this._animateEntry();
         this._firstDraw = true;
       }
+      return this;
+    }
+
+    /**
+     * 更新数据并重绘（不重新创建容器）
+     * 用法: chart.update({data: newArr, labels: newLabels})
+     */
+    update(cfg) {
+      if (this._destroyed) return this;
+      this._suppress = true;
+      if (cfg.data !== undefined) this.config.data = cfg.data;
+      if (cfg.labels !== undefined) this.config.labels = cfg.labels;
+      this._suppress = false;
+      this._renderNow();
       return this;
     }
 
