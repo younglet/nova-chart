@@ -791,8 +791,14 @@
       // 必须在 _makeReactive 之前创建
       this._schedule = makeScheduler(this);
 
-      // 配置合并 + 校验（先用 plain 对象校验）
-      const merged = this._validate(Object.assign({}, DEFAULTS, userConfig));
+      // 配置合并 + 校验
+      var merged = Object.assign({}, DEFAULTS, userConfig);
+      // 支持传 dict 对象直接转 labels/data
+      if (typeof merged.data === 'object' && !Array.isArray(merged.data)) {
+        merged.labels = Object.keys(merged.data);
+        merged.data = Object.values(merged.data);
+      }
+      merged = this._validate(merged);
       this.theme = THEMES[merged.theme] || THEMES.ocean;
 
       // 查找容器（支持 ID 或 DOM 元素）
@@ -860,14 +866,25 @@
 
     draw() {
       if (this._destroyed) return this;
-
       this._renderNow();
-
-      // 入场动画只在首次 draw 触发；Proxy 自动调度走 _renderNow 不放动画
       if (!this._firstDraw) {
         this._animateEntry();
         this._firstDraw = true;
       }
+      return this;
+    }
+
+    /**
+     * 更新数据并重绘（不重新创建容器）
+     * 用法: chart.update({data: newArr, labels: newLabels})
+     */
+    update(cfg) {
+      if (this._destroyed) return this;
+      this._suppress = true;
+      if (cfg.data !== undefined) this.config.data = cfg.data;
+      if (cfg.labels !== undefined) this.config.labels = cfg.labels;
+      this._suppress = false;
+      this._renderNow();
       return this;
     }
 
