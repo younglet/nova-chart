@@ -839,6 +839,16 @@
       if (!VALID_ANIMATIONS.includes(cfg.animation)) {
         cfg.animation = 'fade';
       }
+      // data 也接受对象写法：{'标签': 数值}
+      // 账本（日期 -> 个数）本来就是这种形状，免去每次手工拆成两个数组。
+      // 显式传了 labels 时以 labels 为准。
+      if (cfg.data && typeof cfg.data === 'object' && !isArray(cfg.data)) {
+        if (!isArray(cfg.labels) || cfg.labels.length === 0) {
+          cfg.labels = Object.keys(cfg.data);
+        }
+        cfg.data = Object.values(cfg.data);
+      }
+
       if (!isArray(cfg.labels) || !isArray(cfg.data)) {
         throw new Error('NovaChart: labels 和 data 必须是数组');
       }
